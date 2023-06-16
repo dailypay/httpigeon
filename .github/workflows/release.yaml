@@ -6,13 +6,14 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 jobs:
-  name: Release gem
-  runs-on: ubuntu-latest
-  steps:
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: 3.1
-    - name: setup gem credentials
+  release:
+    name: Release gem
+    runs-on: ubuntu-latest
+    steps:
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1
+      - name: setup gem credentials
         run: |
           mkdir -p $HOME/.gem
           touch $HOME/.gem/credentials
@@ -20,9 +21,9 @@ jobs:
           printf -- "---\n:github: Bearer ${GITHUB_TOKEN}\n" > $HOME/.gem/credentials
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-    - name: get release version tag
+      - name: get release version tag
         run: echo "GEM_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
-    - name: Push to Rubygems
+      - name: Push to Rubygems
         working-directory: "clients/ruby"
         run: |
           gem build "./httpigeon.gemspec --output=httpigeon-${{ github.ref_name }}.gem"
