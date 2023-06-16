@@ -1,0 +1,29 @@
+name: Release
+on:
+  push:
+    branches: [main]
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+jobs:
+  name: Release gem
+  runs-on: ubuntu-latest
+  steps:
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.1
+    - name: setup gem credentials
+        run: |
+          mkdir -p $HOME/.gem
+          touch $HOME/.gem/credentials
+          chmod 0600 $HOME/.gem/credentials
+          printf -- "---\n:github: Bearer ${GITHUB_TOKEN}\n" > $HOME/.gem/credentials
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    - name: get release version tag
+        run: echo "GEM_VERSION=${{ github.ref_name }}" >> $GITHUB_ENV
+    - name: Push to Rubygems
+        working-directory: "clients/ruby"
+        run: |
+          gem build "./httpigeon.gemspec --output=httpigeon-${{ github.ref_name }}.gem"
+          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "httpigeon-${{ github.ref_name }}.gem"
