@@ -1,0 +1,97 @@
+AllCops:
+  TargetRubyVersion: 3.1.2
+  Exclude:
+    - 'bin/**/*'
+    - 'vendor/**/*'
+  NewCops: disable
+
+# Let ruby do it's thing when the time comes
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+# Decision whether to use alias or alias_method is not stylistic
+# See: https://blog.bigbinary.com/2012/01/08/alias-vs-alias-method.html
+Style/Alias:
+  Enabled: false
+
+# This still common in Rails and usually doesn't result in problems.
+Style/ClassAndModuleChildren:
+  Enabled: false
+
+Style/CollectionMethods:
+  Description: Preferred collection methods.
+  StyleGuide: https://github.com/bbatsov/ruby-style-guide#map-find-select-reduce-size
+  Enabled: true
+  PreferredMethods:
+    collect: map
+    collect!: map!
+    find: detect
+    find_all: select
+    reduce: inject
+
+# We don't enforce per-class documentation.
+Style/Documentation:
+  Enabled: false
+
+# We don't mind two-line empty methods as they're easier to start editing and
+# pretty common in auto-generated Rails controllers.
+Style/EmptyMethod:
+  Enabled: false
+
+# There's no statistical difference between single and double quotes
+# performance.
+# See: https://www.viget.com/articles/just-use-double-quoted-ruby-strings/
+Style/StringLiterals:
+  Enabled: false
+
+# Ditto for above.
+Style/StringLiteralsInInterpolation:
+  Enabled: false
+
+# Methods should be easy to read, enforcing an arbitrary metric as number
+# of lines is not the way to do it though.
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Layout/DotPosition:
+  Enabled: true
+  EnforcedStyle: trailing
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented_relative_to_receiver
+  Enabled: false
+  IndentationWidth: ~
+
+# This rule does not detect string interpolations reliably,
+# e.g. accuses 'full_messages.join(", ")'
+Layout/SpaceInsideStringInterpolation:
+  Enabled: false
+
+# Allow arbitrary symbol names
+Naming/VariableNumber:
+  CheckSymbols: false
+
+Metrics/AbcSize:
+  Max: 20
+  Exclude:
+    - 'test/**/*.rb'
+
+Metrics/BlockLength:
+  Exclude:
+    - 'test/**/*'
+
+# Allow long lines with comments
+Layout/LineLength:
+  Max: 160
+  AllowedPatterns: ['(\A|\s)#']
+
+# Allow for multiple expectations on a block
+RSpec/MultipleExpectations:
+  Enabled: false
+
+# Allow for big examples
+RSpec/ExampleLength:
+  Enabled: false
