@@ -68,8 +68,6 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
       context 'when there is a custom event logger' do
         before do
           class MyCustomLogger
-            def initialize(event_type); end
-
             def log(data = {}); end
           end
         end
@@ -78,12 +76,10 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
 
         it 'logs the filtered payload using the custom event logger' do
           logger_mock = Minitest::Mock.new
-          logger_mock.expect(:log, nil, [log_payload])
+          logger_mock.expect(:call, nil, [log_payload.merge(event_type: event_type)])
 
-          event_logger_on_new = ->(e_type) { assert_equal e_type, event_type; logger_mock }
-
-          HTTPigeon.stub(:event_logger, MyCustomLogger) do
-            HTTPigeon.event_logger.stub(:new, event_logger_on_new) do
+          HTTPigeon.stub(:event_logger, MyCustomLogger.new) do
+            HTTPigeon.event_logger.stub(:log, logger_mock) do
               logger.log(faraday_env, base_data)
 
               assert_mock logger_mock
