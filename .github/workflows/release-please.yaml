@@ -1,0 +1,27 @@
+name: release-please
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release-please:
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    permissions: write-all
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/release-please-action@v3
+        id: release
+        with:
+          release-type: ruby
+          package-name: httpigeon
+          bump-minor-pre-major: true
+          bump-patch-for-minor-pre-major: true
+  publish-gem:
+    uses: ./.github/workflows/publish.yaml
+    needs: [ release-please ]
+    if: needs.release.outputs.release_created
+    with:
+      publish: 'true'

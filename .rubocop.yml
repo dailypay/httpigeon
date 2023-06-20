@@ -1,11 +1,16 @@
+require:
+  - rubocop-minitest
+
 AllCops:
   TargetRubyVersion: 3.1.2
   Exclude:
     - 'bin/**/*'
     - 'vendor/**/*'
-  NewCops: disable
+  NewCops: enable
 
-# Let ruby do it's thing when the time comes
+#### ::STYLE ####
+
+# Let Ruby do it's thing when the time comes
 Style/FrozenStringLiteralComment:
   Enabled: false
 
@@ -38,6 +43,10 @@ Style/Documentation:
 Style/EmptyMethod:
   Enabled: false
 
+# We allow hash rockets in rake task dependencies, e.g. task :my_task => :dep.
+Style/HashSyntax:
+  EnforcedShorthandSyntax: never
+
 # There's no statistical difference between single and double quotes
 # performance.
 # See: https://www.viget.com/articles/just-use-double-quoted-ruby-strings/
@@ -48,13 +57,33 @@ Style/StringLiterals:
 Style/StringLiteralsInInterpolation:
   Enabled: false
 
-# Methods should be easy to read, enforcing an arbitrary metric as number
-# of lines is not the way to do it though.
-Metrics/MethodLength:
+Style/BlockDelimiters:
+  AllowBracesOnProceduralOneLiners: true
+
+Style/ModuleFunction:
+  EnforcedStyle: extend_self
+
+Style/SymbolArray:
+  MinSize: 3
+
+Style/WordArray:
+  MinSize: 3
+
+Style/FetchEnvVar:
   Enabled: false
 
-Metrics/ClassLength:
+Style/OpenStructUse:
   Enabled: false
+
+Style/RedundantInitialize:
+  Exclude:
+    - 'test/**/*.rb'
+
+Style/Semicolon:
+  Exclude:
+    - 'test/**/*.rb'
+
+#### ::LAYOUT ####
 
 Layout/DotPosition:
   Enabled: true
@@ -70,28 +99,63 @@ Layout/MultilineMethodCallIndentation:
 Layout/SpaceInsideStringInterpolation:
   Enabled: false
 
+# Allow long lines with comments
+Layout/LineLength:
+  Max: 200
+  AllowedPatterns: ['(\A|\s)#']
+
+#### ::LINT ####
+Lint/AssignmentInCondition:
+  AllowSafeAssignment: false
+
+Lint/ConstantDefinitionInBlock:
+  Exclude:
+    - 'test/**/*.rb'
+
+#### ::METRICS ####
+
+# Methods should be easy to read, enforcing an arbitrary metric as number
+# of lines is not the way to do it though.
+Metrics/MethodLength:
+  Enabled: false
+
+Metrics/ClassLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Metrics/BlockLength:
+  Enabled: false
+
+Metrics/CyclomaticComplexity:
+  Enabled: false
+
+Metrics/PerceivedComplexity:
+  Enabled: false
+
+Metrics/ParameterLists:
+  Enabled: false
+
+#### ::NAMING ####
+
 # Allow arbitrary symbol names
 Naming/VariableNumber:
   CheckSymbols: false
 
-Metrics/AbcSize:
-  Max: 20
-  Exclude:
-    - 'test/**/*.rb'
-
-Metrics/BlockLength:
-  Exclude:
-    - 'test/**/*'
-
-# Allow long lines with comments
-Layout/LineLength:
-  Max: 160
-  AllowedPatterns: ['(\A|\s)#']
-
-# Allow for multiple expectations on a block
-RSpec/MultipleExpectations:
+Naming/BlockForwarding:
   Enabled: false
 
-# Allow for big examples
-RSpec/ExampleLength:
+#### ::GEM ####
+Gemspec/DevelopmentDependencies:
   Enabled: false
+
+Gemspec/OrderedDependencies:
+  Enabled: false
+
+Gemspec/RequireMFA:
+  Enabled: false
+
+#### ::MINITEST ####
+Minitest/MultipleAssertions:
+  Max: 5
