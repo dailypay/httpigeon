@@ -22,6 +22,6 @@ jobs:
   publish-gem:
     uses: ./.github/workflows/publish.yaml
     needs: [ release-please ]
-    if: needs.release.outputs.release_created
+    if: needs.release-please.outputs.release_created
     with:
       publish: 'true'
