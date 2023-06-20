@@ -6,6 +6,9 @@ on:
         required: false
         type: string
         default: 'false'
+      gem_version:
+        required: true
+        type: string
 jobs:
   release:
     name: Release gem
