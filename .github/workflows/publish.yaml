@@ -28,10 +28,9 @@ jobs:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
       - name: get release version tag
         if: inputs.publish == 'true'
-        run: echo "GEM_VERSION=${{ inputs.gem_version }}" >> $GITHUB_ENV
+        run: echo "GEM_VERSION=1.1.1" >> $GITHUB_ENV
       - name: Push to Rubygems
-        working-directory: '.'
         if: inputs.publish == 'true'
         run: |
-          gem build "./httpigeon.gemspec --output=httpigeon-${{ inputs.gem_version }}.gem"
-          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "httpigeon-${{ inputs.gem_version }}.gem"
+          gem build "./httpigeon.gemspec"
+          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "httpigeon-1.1.1.gem"
