@@ -1,8 +1,5 @@
 name: release-please
-on:
-  push:
-    branches:
-      - main
+on: [pull_request]
 
 jobs:
   release-please:
@@ -21,7 +18,7 @@ jobs:
           bump-patch-for-minor-pre-major: true
   publish-gem:
     uses: ./.github/workflows/publish.yaml
-    needs: [ release ]
+    needs: [ release-please ]
     if: needs.release.outputs.release_created
     with:
-      publish: 'true'
+      publish: 'false'
