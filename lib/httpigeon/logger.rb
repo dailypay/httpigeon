@@ -9,9 +9,10 @@ module HTTPigeon
     end
 
     def log(faraday_env, data = {})
+      base_log_data = { event_type: event_type }
       log_data = build_log_data(faraday_env, data)
 
-      HTTPigeon.event_logger.nil? ? log_to_stdout : HTTPigeon.event_logger.new(event_type).log(log_data)
+      HTTPigeon.event_logger.nil? ? log_to_stdout : HTTPigeon.event_logger.log(log_data.merge(base_log_data))
     rescue StandardError => e
       HTTPigeon.exception_notifier.notify_exception(e) if HTTPigeon.notify_all_exceptions
       raise e if ['development', 'test'].include?(ENV['RAILS_ENV'].to_s)
