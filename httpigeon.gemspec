@@ -7,6 +7,7 @@ Gem::Specification.new do |spec|
   spec.version = HTTPigeon::VERSION
   spec.authors = ["2k-joker"]
   spec.email = ["khalil.kum@dailypay.com"]
+  spec.licenses = ["Nonstandard"]
 
   spec.summary = "Simple, easy way to make and log HTTP requests and responses"
   spec.description = "Client library that simplifies making and logging HTTP requests and responses. This library is built as an abstraction on top of the Faraday ruby client."
@@ -36,7 +37,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rubocop-minitest", "~> 0.31.0"
   spec.add_development_dependency "rubocop", "~> 1.21"
   spec.add_development_dependency "pry", "~> 0.13.1"
-  spec.add_development_dependency "minitest-stub_any_instance"
+  spec.add_development_dependency "minitest-stub_any_instance", "~> 1.0.3"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
