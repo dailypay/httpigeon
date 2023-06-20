@@ -1,3 +1,12 @@
+# Changelog
+
+## [1.1.1](https://github.com/dailypay/httpigeon/compare/v1.1.0...v1.1.1) (2023-06-20)
+
+
+### Bug Fixes
+
+* **httpigeon:** Leave event logger constructor signature up to call site ([#10](https://github.com/dailypay/httpigeon/issues/10)) ([03ba441](https://github.com/dailypay/httpigeon/commit/03ba441c66d8ea6562f218b41cc8f724bd98a4a9))
+
 ## 1.0.0 (2023-06-20)
 Initial release
 
