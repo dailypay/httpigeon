@@ -46,7 +46,7 @@ module HTTPigeon
       log_data[:response] = {
         headers: filter(env.response_headers),
         body: filter(env.response_body),
-        status: env.status,
+        status: env.status
       }
 
       log_data[:metadata] = {

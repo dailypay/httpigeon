@@ -77,17 +77,17 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         after { HTTPigeon::LoggerTest.send :remove_const, "MyCustomLogger" }
 
         it 'logs the filtered payload using the custom event logger' do
-          HTTPigeon.configure { |c| c.event_logger = MyCustomLogger }
-
           logger_mock = Minitest::Mock.new
           logger_mock.expect(:log, nil, [log_payload])
 
           event_logger_on_new = ->(e_type) { assert_equal e_type, event_type; logger_mock }
-  
-          HTTPigeon.event_logger.stub(:new, event_logger_on_new) do
-            logger.log(faraday_env, base_data)
-  
-            assert_mock logger_mock
+
+          HTTPigeon.stub(:event_logger, MyCustomLogger) do
+            HTTPigeon.event_logger.stub(:new, event_logger_on_new) do
+              logger.log(faraday_env, base_data)
+
+              assert_mock logger_mock
+            end
           end
         end
       end
@@ -96,7 +96,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         it 'logs the filtered payload with ruby logger' do
           on_log = ->(*args) { assert_equal [1, { event_type: event_type, data: log_payload }.to_json, nil], args }
           ruby_logger_on_new = ->(arg) { assert_equal $stdout, arg }
-  
+
           Logger.stub(:new, ruby_logger_on_new) do
             Logger.stub_any_instance(:log, on_log) do
               logger.log(faraday_env, base_data)
