@@ -1,8 +1,5 @@
 name: release-please
-on:
-  push:
-    branches:
-      - main
+on: [pull_request]
 
 jobs:
   release-please:
@@ -25,7 +22,6 @@ jobs:
   publish-gem:
     uses: ./.github/workflows/publish.yaml
     needs: [ release-please ]
-    if: needs.release-please.outputs.release_created
     with:
       publish: 'true'
       gem_version: "${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}.${{ needs.release-please.outputs.patch }}"

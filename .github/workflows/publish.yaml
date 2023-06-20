@@ -30,6 +30,7 @@ jobs:
         if: inputs.publish == 'true'
         run: echo "GEM_VERSION=${{ inputs.gem_version }}" >> $GITHUB_ENV
       - name: Push to Rubygems
+        working-directory: '.'
         if: inputs.publish == 'true'
         run: |
           gem build "./httpigeon.gemspec --output=httpigeon-${{ inputs.gem_version }}.gem"
