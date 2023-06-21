@@ -1,8 +1,22 @@
 name: CI
-on: [pull_request]
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+
 jobs:
+  validate-conventional-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for conventional commit
+        uses: agenthunt/conventional-commit-checker-action@v1.0.0
+        with:
+          pr-title-regex: '^((build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\(.*\))?(!)?(: (.*\s*)*))|(^Merge (.*\s*)*)|(^Initial commit$)'
+          pr-body-regex: '.*'
+
   unit-test:
     runs-on: ubuntu-latest
+    if: ${{ github.event.action != 'edited' }}
     steps:
       - uses: actions/checkout@v3
       - name: Set up Ruby

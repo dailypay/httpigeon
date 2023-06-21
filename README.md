@@ -94,3 +94,7 @@ To install this gem onto your local machine, run `bundle exec rake install:local
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/dailypay/httpigeon.
+
+**Making Pull Requests:**
+
+This project uses [release-please](https://github.com/google-github-actions/release-please-action) for automated releases. As such, any pull request that fails the [conventional commits](https://www.conventionalcommits.org/en/v1.0.0-beta.4/#summary) validation will not be merged.
