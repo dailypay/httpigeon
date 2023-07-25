@@ -7,7 +7,7 @@ Gem::Specification.new do |spec|
   spec.version = HTTPigeon::VERSION
   spec.authors = ["2k-joker"]
   spec.email = ["khalil.kum@dailypay.com"]
-  spec.licenses = ["Nonstandard"]
+  spec.licenses = ["MIT"]
 
   spec.summary = "Simple, easy way to make and log HTTP requests and responses"
   spec.description = "Client library that simplifies making and logging HTTP requests and responses. This library is built as an abstraction on top of the Faraday ruby client."
