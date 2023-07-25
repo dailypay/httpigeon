@@ -11,14 +11,14 @@ module HTTPigeon
   extend self
 
   delegate :default_event_type,
-    :default_filter_keys,
-    :redactor_string,
-    :log_redactor,
-    :event_logger,
-    :auto_generate_request_id,
-    :notify_all_exceptions,
-    :exception_notifier,
-    to: :configuration
+           :default_filter_keys,
+           :redactor_string,
+           :log_redactor,
+           :event_logger,
+           :auto_generate_request_id,
+           :notify_all_exceptions,
+           :exception_notifier,
+           to: :configuration
 
   def configure
     @config = HTTPigeon::Configuration.new

@@ -3,6 +3,8 @@ require "active_support/core_ext/object/deep_dup"
 
 module HTTPigeon
   class Logger
+    attr_reader :event_type, :log_redactor, :start_time, :end_time
+
     def initialize(event_type: nil, additional_filter_keys: nil, log_filters: nil)
       @event_type = event_type || HTTPigeon.default_event_type
 
@@ -30,8 +32,6 @@ module HTTPigeon
     end
 
     private
-
-    attr_reader :event_type, :log_redactor, :start_time, :end_time
 
     def build_log_data(env, data)
       log_data = data.deep_dup
@@ -81,7 +81,6 @@ module HTTPigeon
     end
 
     def log_to_stdout(log_data)
-      puts log_data.to_json
       Logger.new($stdout).log(1, log_data.to_json)
     end
   end

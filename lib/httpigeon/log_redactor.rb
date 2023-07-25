@@ -2,17 +2,20 @@ require "active_support/core_ext/hash"
 
 module HTTPigeon
   class LogRedactor
+    attr_reader :hash_filter_keys, :string_filters
+
     def initialize(hash_filter_keys: nil, string_filters: nil)
       @hash_filter_keys = hash_filter_keys.map(&:to_s).map(&:downcase)
       @string_filters = string_filters || []
     end
 
     def redact(data)
-      if data.is_a?(Array)
+      case data
+      when Array
         data.map { |datum| redact(datum) }
-      elsif data.is_a?(String)
+      when String
         redact_string(data)
-      elsif data.is_a?(Hash)
+      when Hash
         redact_hash(data)
       else
         data
@@ -20,8 +23,6 @@ module HTTPigeon
     end
 
     private
-
-    attr_reader :hash_filter_keys, :string_filters
 
     def redact_hash(data)
       data.to_h do |k, v|
@@ -37,13 +38,13 @@ module HTTPigeon
 
     def redact_string(data)
       string_filters.each do |filter|
-        if filter.sub_prefix.present?
-          data = data.gsub(filter.pattern, "#{filter.sub_prefix}#{HTTPigeon.redactor_string}")
-        else
-          data = data.gsub(filter.pattern, filter.replacement)
-        end
+        data = if filter.sub_prefix.present?
+                 data.gsub(filter.pattern, "#{filter.sub_prefix}#{HTTPigeon.redactor_string}")
+               else
+                 data.gsub(filter.pattern, filter.replacement)
+               end
       end
-  
+
       data
     end
   end
