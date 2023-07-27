@@ -5,7 +5,7 @@ module HTTPigeon
     attr_reader :hash_filter_keys, :string_filters
 
     def initialize(hash_filter_keys: nil, string_filters: nil)
-      @hash_filter_keys = hash_filter_keys.map(&:to_s).map(&:downcase)
+      @hash_filter_keys = (hash_filter_keys || []).map(&:to_s).map(&:downcase)
       @string_filters = string_filters || []
     end
 
@@ -28,8 +28,10 @@ module HTTPigeon
       data.to_h do |k, v|
         v = HTTPigeon.redactor_string if hash_filter_keys.include?(k.to_s.downcase)
 
-        if v.is_a?(Hash) || v.is_a?(Array)
+        if v.is_a?(Hash)
           [k, redact_hash(v)]
+        elsif v.is_a?(Array)
+          [k, v.map { |val| redact_hash(val) }]
         else
           [k, v]
         end

@@ -42,11 +42,11 @@ class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
     end
 
     context 'when data is a hash' do
-      let(:data) { { key_1: 'duper-secret', key_4: 'public-knowledge', key_5: { key_2: 'duper-duper-secret' } } }
+      let(:data) { { key_1: 'duper-secret', key_4: 'public-knowledge', key_5: [{ key_2: 'duper-duper-secret' }, { key_3: 'also-public-knowledge' }] } }
 
       it 'filters all elements' do
         HTTPigeon.stub(:redactor_string, '<redacted>') do
-          expected = { key_1: '<redacted>', key_4: 'public-knowledge', key_5: { key_2: '<redacted>' } }
+          expected = { key_1: '<redacted>', key_4: 'public-knowledge', key_5: [{ key_2: '<redacted>' }, { key_3: 'also-public-knowledge' }] }
 
           assert_equal expected, redactor.redact(data)
         end
