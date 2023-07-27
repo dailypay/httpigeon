@@ -6,6 +6,20 @@ The goal of this library is to add a layer of abstraction on top of [Faraday](ht
 
 ## Usage
 
+**Configuration:**
+```ruby
+HTTPigeon.configure do |config|
+  config.default_event_type = # Set a default event type for all requests, overridable per request. Default: 'http.outbound'
+  config.default_filter_keys = # Set a default list of keys to be redacted for Hash payloads, overridable per request. Default: []
+  config.redactor_string = # Set a string that should be used as the replacement when redacting sensitive data. Default: '[FILTERED]'
+  config.log_redactor = # Specify an object to be used for redacting data before logging. Must respond to #redact(data<Hash, String>). Default: nil
+  config.event_logger = # Specify an object to be used for logging request roundtrip events. Default: $stdout
+  config.auto_generate_request_id = # Auto-generate a uuid for each request and store in a 'X-Request-Id' header?
+  config.exception_notifier = # Specify an object to be used for reporting errors. Must respond to #notify_exception(e<Exception>)
+  config.notify_all_exceptions = # Do you want these errors to actually get reported/notified?
+end
+```
+
 **Instantiating with a block:**
 ```ruby
 # @option [String] base_url the base URI (required)
@@ -24,14 +38,28 @@ request.run(path: '/users/1')
 
 **Instantiating with customizable arguments:**
 ```ruby
-# @option [String] base_url the base URI (required)
-# @option [Hash] options the Faraday connection options (default: {})
-# @option [Hash] headers the request headers (default: {})
-# @option [Faraday::Adapter] adapter the Faraday adapter (default: Net::HTTP)
-# @option [Logger] logger for logging request and response (default: HTTPigeon::Logger)
-# @option [String] event_type for filtering/scoping the logs (default: 'http.outbound')
-# @option [Array] filter_keys list of keys in headers and body to be redacted before logging (default: [])
-request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, filter_keys: [:ssn, :password])
+# @param type [Symbol, String] the type of object this filter will be applied to (:hash or :string)
+# @param pattern [Symbol, String, Regex] the exact key or pattern that should be redacted
+# @param sub_prefix [String] a prefix to be combined with the configured :redactor_string as the replacement for the sensitive data (default: nil)
+# @param replacement [String] a string to be used as the replacement for the sensitive data.
+#    If :sub_prefix is defined, this value will be ignored (default: nil)
+filter_1 = HTTPigeon::Filter.new(:hash, 'access_token')
+filter_2 = HTTPigeon::Filter.new(:string, /username=[0-9a-z]*/i, 'username=')
+filter_3 = HTTPigeon::Filter.new(:string, /password=[0-9a-z]*/i, nil, 'password=***')
+
+# @param base_url [String] the base URI
+# @param options [Hash] the Faraday connection options (default: {})
+# @param headers [Hash] the request headers (default: {})
+# @param adapter [Faraday::Adapter] the Faraday adapter (default: Net::HTTP)
+# @param logger [Logger] for logging request and response (default: HTTPigeon::Logger)
+# @param event_type [String] for filtering/scoping the logs (default: 'http.outbound')
+# @param filter_keys [Array<String, Symbol>] specifies keys in headers and body to be redacted before logging.
+#    Can only define keys for Hash payloads (default: [])
+# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+#    Can define keys for both Hash and String payloads (default: [])
+# @note :filter_keys and :log_filters can both be specified but it is recommended to define all filters using :log_filters
+#    if you wish to filter both Hashes and Strings
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, filter_keys: [:ssn, :ip_address], log_filters: [filter_1, filter_2, filter_3])
 request.run(path: '/users/1')
 ```
 
@@ -60,10 +88,12 @@ class CustomLogger < Logger
     super(:info, log_data.to_json)
   end
 
+  # optional method
   def on_request_start
     @start_time = Time.current
   end
 
+  # optional method
   def on_request_finish
     @end_time = Time.current
   end
@@ -75,7 +105,7 @@ request.run(path: '/users/1')
 
 **Using the default logger:**
 
-To use the default logger (`HTTPigeon::Logger`), simply pass a custom `:filter_keys` and `:event_type` args, if necessary, and you're all set.
+To use the default logger (`HTTPigeon::Logger`), simply pass a custom `:filter_keys`, `:log_filters` and `:event_type` args, if necessary, and you're all set.
 
 **Running a request:**
 

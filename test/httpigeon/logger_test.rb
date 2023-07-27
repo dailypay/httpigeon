@@ -1,6 +1,33 @@
 require_relative "../test_helper"
 
 class HTTPigeon::LoggerTest < HTTPigeon::TestCase
+  describe '#new' do
+    context 'when a custom log redactor is defined' do
+      it 'uses the HTTPigeon redactor' do
+        HTTPigeon.stub(:log_redactor, :my_custom_log_redactor) do
+          logger = HTTPigeon::Logger.new
+
+          assert_equal :my_custom_log_redactor, logger.log_redactor
+        end
+      end
+    end
+
+    context 'when a custom log redactor is not defined' do
+      it 'uses the HTTPigeon redactor' do
+        filter_keys = [:key_1, :key_2]
+        log_filters = [HTTPigeon::Filter.new(:hash, :key_3), HTTPigeon::Filter.new(:string, /key_4=[0-9a-z]*/i)]
+
+        HTTPigeon.stub(:log_redactor, nil) do
+          logger = HTTPigeon::Logger.new(additional_filter_keys: filter_keys, log_filters: log_filters)
+
+          assert_instance_of HTTPigeon::LogRedactor, logger.log_redactor
+          assert_equal %w[key_1 key_2 key_3], logger.log_redactor.hash_filter_keys
+          assert_equal [log_filters.last], logger.log_redactor.string_filters
+        end
+      end
+    end
+  end
+
   describe '#log' do
     let(:event_type) { nil }
     let(:filter_keys) { %w[account_number ssn X-Subscription-Key x-api-token] }

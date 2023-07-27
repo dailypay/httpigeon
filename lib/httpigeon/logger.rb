@@ -3,16 +3,21 @@ require "active_support/core_ext/object/deep_dup"
 
 module HTTPigeon
   class Logger
-    def initialize(event_type: nil, additional_filter_keys: nil)
+    attr_reader :event_type, :log_redactor, :start_time, :end_time
+
+    def initialize(event_type: nil, additional_filter_keys: nil, log_filters: nil)
       @event_type = event_type || HTTPigeon.default_event_type
-      @additional_filter_keys = additional_filter_keys.to_a.map(&:to_s)
+
+      hash_filters, string_filters = (log_filters || []).partition { |filter| filter.type.to_sym == :hash }
+      hash_filter_keys = HTTPigeon.default_filter_keys + additional_filter_keys.to_a + hash_filters.map(&:pattern)
+      @log_redactor = HTTPigeon.log_redactor || HTTPigeon::LogRedactor.new(hash_filter_keys: hash_filter_keys, string_filters: string_filters)
     end
 
     def log(faraday_env, data = {})
       base_log_data = { event_type: event_type }
-      log_data = build_log_data(faraday_env, data)
+      log_data = build_log_data(faraday_env, data).merge(base_log_data)
 
-      HTTPigeon.event_logger.nil? ? log_to_stdout : HTTPigeon.event_logger.log(log_data.merge(base_log_data))
+      HTTPigeon.event_logger.nil? ? log_to_stdout(log_data) : HTTPigeon.event_logger.log(log_data)
     rescue StandardError => e
       HTTPigeon.exception_notifier.notify_exception(e) if HTTPigeon.notify_all_exceptions
       raise e if ['development', 'test'].include?(ENV['RAILS_ENV'].to_s)
@@ -27,8 +32,6 @@ module HTTPigeon
     end
 
     private
-
-    attr_reader :event_type, :header_log_keys, :additional_filter_keys, :start_time, :end_time
 
     def build_log_data(env, data)
       log_data = data.deep_dup
@@ -68,39 +71,17 @@ module HTTPigeon
       log_data
     end
 
-    def filter_keys
-      @filter_keys ||= (HTTPigeon.default_filter_keys + additional_filter_keys).map(&:downcase)
-    end
-
     def filter(body)
       return {} if body.blank?
 
       body = JSON.parse(body) if body.is_a?(String)
-      filter_hash(body)
+      log_redactor.redact(body)
     rescue JSON::ParserError
-      body
+      log_redactor.redact(body)
     end
 
-    def filter_hash(data)
-      if data.is_a?(Array)
-        data.map { |datum| filter_hash(datum) }
-      elsif !data.is_a?(Hash)
-        data
-      else
-        data.to_h do |k, v|
-          v = '[FILTERED]' if filter_keys.include?(k.to_s.downcase)
-
-          if v.is_a?(Hash) || v.is_a?(Array)
-            [k, filter_hash(v)]
-          else
-            [k, v]
-          end
-        end
-      end
-    end
-
-    def log_to_stdout
-      Logger.new($stdout).log(1, { event_type: event_type, data: log_data }.to_json)
+    def log_to_stdout(log_data)
+      Logger.new($stdout).log(1, log_data.to_json)
     end
   end
 end
