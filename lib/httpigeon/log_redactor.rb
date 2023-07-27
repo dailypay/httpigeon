@@ -31,7 +31,7 @@ module HTTPigeon
         if v.is_a?(Hash)
           [k, redact_hash(v)]
         elsif v.is_a?(Array)
-          [k, v.map { |val| redact_hash(val) }]
+          [k, v.map { |val| redact(val) }]
         else
           [k, v]
         end
