@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
 
   spec.summary = "Simple, easy way to make and log HTTP requests and responses"
   spec.description = "Client library that simplifies making and logging HTTP requests and responses. This library is built as an abstraction on top of the Faraday ruby client."
-  spec.homepage = "https://github.com/dailypay/httpigeon-ruby"
+  spec.homepage = "https://github.com/dailypay/#{spec.name}"
   spec.required_ruby_version = Gem::Requirement.new("~> 3.1.0")
 
   spec.metadata["allowed_push_host"] = "https://rubygems.pkg.github.com/dailypay"
