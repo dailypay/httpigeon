@@ -29,3 +29,4 @@ jobs:
     with:
       publish: 'true'
       gem_version: "${{ needs.release-please.outputs.major }}.${{ needs.release-please.outputs.minor }}.${{ needs.release-please.outputs.patch }}"
+      gem_name: "${{ github.event.repository.name }}"
