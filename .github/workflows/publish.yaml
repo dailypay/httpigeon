@@ -9,6 +9,9 @@ on:
       gem_version:
         required: true
         type: string
+      gem_name:
+        required: true
+        type: string
 jobs:
   release:
     name: Release gem
@@ -34,5 +37,5 @@ jobs:
       - name: Push to Rubygems
         if: inputs.publish == 'true'
         run: |
-          gem build "./httpigeon.gemspec --output=httpigeon-${{ inputs.gem_version }}.gem"
-          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "httpigeon-${{ inputs.gem_version }}.gem"
+          gem build "./${{ inputs.gem_name }}.gemspec"
+          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "${{ inputs.gem_name }}-${{ inputs.gem_version }}.gem"
