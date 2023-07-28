@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/dailypay/httpigeon/compare/v1.1.1...v1.2.0) (2023-07-28)
+
+
+### Features
+
+* Add customizable log redactor that can handle both Hash and String payload. Also add support for auto-generating request IDs ([#14](https://github.com/dailypay/httpigeon/issues/14)) ([c3efa0a](https://github.com/dailypay/httpigeon/commit/c3efa0a510cda687f6a6822e17c1c9600ba4dfd0))
+
 ## [1.1.1](https://github.com/dailypay/httpigeon/compare/v1.1.0...v1.1.1) (2023-06-20)
 
 
