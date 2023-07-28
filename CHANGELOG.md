@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/dailypay/httpigeon/compare/v1.2.0...v1.2.1) (2023-07-28)
+
+
+### Bug Fixes
+
+* **logger:** Fix reference to ruby Logger constant ([#19](https://github.com/dailypay/httpigeon/issues/19)) ([ec99bd5](https://github.com/dailypay/httpigeon/commit/ec99bd5b6371256ded6c88c8413b0bd2c926a7a1))
+
 ## [1.2.0](https://github.com/dailypay/httpigeon/compare/v1.1.1...v1.2.0) (2023-07-28)
 
 
