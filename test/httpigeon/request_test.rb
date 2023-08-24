@@ -29,7 +29,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         response = HTTPigeon::Request.get(endpoint, query, headers, event_type)
 
         assert response.is_a?(HTTPigeon::Response)
-        assert_equal response.parse_response, { hello: 'hi' }
+        assert_equal response.parsed_response, { hello: 'hi' }
         assert_equal response.raw_response, 'faraday-response'
         assert_mock request_mock
       end
@@ -64,7 +64,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         response = HTTPigeon::Request.post(endpoint, payload, headers, event_type)
 
         assert response.is_a?(HTTPigeon::Response)
-        assert_equal response.parse_response, { hello: 'hi' }
+        assert_equal response.parsed_response, { hello: 'hi' }
         assert_equal response.raw_response, 'faraday-response'
         assert_mock request_mock
       end

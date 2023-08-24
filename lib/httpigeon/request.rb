@@ -86,11 +86,11 @@ module HTTPigeon
   end
 
   class Response
-    attr_reader :request, :parse_response, :raw_response
+    attr_reader :request, :parsed_response, :raw_response
 
     def initialize(request, parsed_response, raw_response)
       @request = request
-      @parse_response = parsed_response
+      @parsed_response = parsed_response
       @raw_response = raw_response
     end
   end
