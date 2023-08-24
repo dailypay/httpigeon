@@ -9,8 +9,8 @@ module HTTPigeon
     class << self
       def get(endpoint, query = {}, headers = {}, event_type = nil, log_filters = [])
         request = new(base_url: endpoint, headers: headers, event_type: event_type, log_filters: log_filters)
-        parsed_response = request.run(method: :get, path: '', payload: query) do |request|
-          yield(request) if block_given?
+        parsed_response = request.run(method: :get, path: '', payload: query) do |req|
+          yield(req) if block_given?
         end
 
         HTTPigeon::Response.new(request, parsed_response, request.response)
@@ -18,8 +18,8 @@ module HTTPigeon
 
       def post(endpoint, payload, headers = {}, event_type = nil, log_filters = [])
         request = new(base_url: endpoint, headers: headers,  event_type: event_type, log_filters: log_filters)
-        parsed_response = request.run(method: :post, path: '', payload: payload) do |request|
-          yield(request) if block_given?
+        parsed_response = request.run(method: :post, path: '', payload: payload) do |req|
+          yield(req) if block_given?
         end
 
         HTTPigeon::Response.new(request, parsed_response, request.response)

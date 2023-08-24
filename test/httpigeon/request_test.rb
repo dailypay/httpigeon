@@ -1,6 +1,7 @@
 require_relative "../test_helper"
 
 class HTTPigeon::RequestTest < HTTPigeon::TestCase
+  # rubocop:disable Minitest/MultipleAssertions
   describe '.get' do
     it 'makes request with expected arguments' do
       endpoint = 'https://dummyjson.com/users/search'
@@ -11,7 +12,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
       request_mock = Minitest::Mock.new
       request_mock.expect(:response, 'faraday-response')
       request_mock.expect(:run, { hello: 'hi' }) do |**kwargs|
-        assert_equal kwargs[:method], :get
+        assert_equal :get, kwargs[:method]
         assert_empty kwargs[:path]
         assert_equal kwargs[:payload], query
       end
@@ -20,7 +21,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         assert_equal kwargs[:base_url], endpoint
         assert_equal kwargs[:headers], headers
         assert_equal kwargs[:event_type], event_type
-        assert_equal kwargs[:log_filters], []
+        assert_empty kwargs[:log_filters]
 
         request_mock
       end
@@ -29,8 +30,8 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         response = HTTPigeon::Request.get(endpoint, query, headers, event_type)
 
         assert response.is_a?(HTTPigeon::Response)
-        assert_equal response.parsed_response, { hello: 'hi' }
-        assert_equal response.raw_response, 'faraday-response'
+        assert_equal Hash(hello: 'hi'), response.parsed_response
+        assert_equal 'faraday-response', response.raw_response
         assert_mock request_mock
       end
     end
@@ -39,14 +40,14 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
   describe '.post' do
     it 'makes request with expected arguments' do
       endpoint = 'https://dummyjson.com/users/add'
-      payload = { 'firstName': 'John', 'lastName': 'Doe' }
+      payload = { firstName: 'John', lastName: 'Doe' }
       event_type = 'some.event'
       headers = { 'Foo' => 'Barzzz' }
 
       request_mock = Minitest::Mock.new
       request_mock.expect(:response, 'faraday-response')
       request_mock.expect(:run, { hello: 'hi' }) do |**kwargs|
-        assert_equal kwargs[:method], :post
+        assert_equal :post, kwargs[:method]
         assert_empty kwargs[:path]
         assert_equal kwargs[:payload], payload
       end
@@ -55,7 +56,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         assert_equal kwargs[:base_url], endpoint
         assert_equal kwargs[:headers], headers
         assert_equal kwargs[:event_type], event_type
-        assert_equal kwargs[:log_filters], []
+        assert_empty kwargs[:log_filters]
 
         request_mock
       end
@@ -64,12 +65,13 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         response = HTTPigeon::Request.post(endpoint, payload, headers, event_type)
 
         assert response.is_a?(HTTPigeon::Response)
-        assert_equal response.parsed_response, { hello: 'hi' }
-        assert_equal response.raw_response, 'faraday-response'
+        assert_equal Hash(hello: 'hi'), response.parsed_response
+        assert_equal 'faraday-response', response.raw_response
         assert_mock request_mock
       end
     end
   end
+  # rubocop:enable Minitest/MultipleAssertions
 
   describe '#new' do
     context 'when a custom logger is not provided' do
