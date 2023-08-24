@@ -83,6 +83,9 @@ Style/Semicolon:
   Exclude:
     - 'test/**/*.rb'
 
+Style/Lambda:
+  Enabled: false
+
 #### ::LAYOUT ####
 
 Layout/DotPosition:

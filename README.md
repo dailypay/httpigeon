@@ -109,10 +109,39 @@ To use the default logger (`HTTPigeon::Logger`), simply pass a custom `:filter_k
 
 **Running a request:**
 
-You can pass a block to further customize a specific request:
+* You can pass a block to further customize a specific request:
 ```ruby
-# Returns a Hash (parsed JSON) response or a String if the original response was a string
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', logger: CustomLogger.new)
+
+# Returns a Hash (parsed JSON) response or a String if the original response was not valid JSON
 request.run(path: '/users/1') { |request| request.headers['X-Request-Signature'] = Base64.encode64("#{method}::#{path}") }
+
+# Access the raw Faraday response
+request.response
+
+# Quickly get the response status
+request.response_status
+
+# Quickly get the raw response body
+request.response_body
+```
+* There is a convenient :get and :post class method you can use
+```ruby
+# @param endpoint [String] the URI endpoint you're trying to hit
+# @param query [Hash] the request query params (default: {})
+# @param headers [Hash] the request headers (default: {})
+# @param event_type [String] the event type for logs grouping (default: 'http.outbound')
+# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+# @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
+response = HTTPigeon::Request.get(endpoint, query, headers, event_type, log_filters)
+
+# @param endpoint [String] the URI endpoint you're trying to hit
+# @param payload [Hash] the request payload/body (default: {})
+# @param headers [Hash] the request headers (default: {})
+# @param event_type [String] the event type for logs grouping (default: 'http.outbound')
+# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+# @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
+response = HTTPigeon::Request.post(endpoint, payload, headers, event_type, log_filters)
 ```
 
 ## Development
