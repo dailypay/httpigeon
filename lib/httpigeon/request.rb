@@ -6,6 +6,26 @@ require_relative "middleware/httpigeon_logger"
 
 module HTTPigeon
   class Request
+    class << self
+      def get(endpoint, query = {}, headers = {}, event_type = nil, log_filters = [])
+        request = new(base_url: endpoint, headers: headers, event_type: event_type, log_filters: log_filters)
+        parsed_response = request.run(method: :get, path: '', payload: query) do |request|
+          yield(request) if block_given?
+        end
+
+        HTTPigeon::Response.new(request, parsed_response, request.response)
+      end
+
+      def post(endpoint, payload, headers = {}, event_type = nil, log_filters = [])
+        request = new(base_url: endpoint, headers: headers,  event_type: event_type, log_filters: log_filters)
+        parsed_response = request.run(method: :post, path: '', payload: payload) do |request|
+          yield(request) if block_given?
+        end
+
+        HTTPigeon::Response.new(request, parsed_response, request.response)
+      end
+    end
+
     attr_reader :connection, :response, :parsed_response
 
     delegate :status, :body, to: :response, prefix: true
@@ -62,6 +82,16 @@ module HTTPigeon
 
     def default_headers
       HTTPigeon.auto_generate_request_id ? { 'Accept' => 'application/json', 'X-Request-Id' => SecureRandom.uuid } : { 'Accept' => 'application/json' }
+    end
+  end
+
+  class Response
+    attr_reader :request, :parse_response, :raw_response
+
+    def initialize(request, parsed_response, raw_response)
+      @request = request
+      @parse_response = parsed_response
+      @raw_response = raw_response
     end
   end
 end
