@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/dailypay/httpigeon/compare/v1.2.1...v1.3.0) (2023-08-24)
+
+
+### Features
+
+* **request:** Add helper :get and :post class methods ([#21](https://github.com/dailypay/httpigeon/issues/21)) ([e7427a6](https://github.com/dailypay/httpigeon/commit/e7427a6f1fe2d39e4cce2ec3ea1188e03b563287))
+
 ## [1.2.1](https://github.com/dailypay/httpigeon/compare/v1.2.0...v1.2.1) (2023-07-28)
 
 
