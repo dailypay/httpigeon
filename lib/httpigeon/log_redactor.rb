@@ -2,11 +2,10 @@ require "active_support/core_ext/hash"
 
 module HTTPigeon
   class LogRedactor
-    attr_reader :hash_filter_keys, :string_filters
+    attr_reader :log_filters
 
-    def initialize(hash_filter_keys: nil, string_filters: nil)
-      @hash_filter_keys = (hash_filter_keys || []).map(&:to_s).map(&:downcase)
-      @string_filters = string_filters || []
+    def initialize(log_filters: nil)
+      @log_filters = log_filters.to_a.map(&:to_s)
     end
 
     def redact(data)
@@ -24,9 +23,26 @@ module HTTPigeon
 
     private
 
+    def redact_hash_value(value, redactor_string)
+      length = value.to_s.length
+
+      case
+      when length <= 4
+        redactor_string
+      when length <= 8
+        "#{value.to_s[0..2]}...#{redactor_string}"
+      when length <= 32
+        "#{value.to_s[0..length/4]}...#{redactor_string}"
+      else
+        "#{value.to_s[0..5]}...#{redactor_string}...#{value.to_s[-6..-1]}"
+      end
+    end
+
     def redact_hash(data)
       data.to_h do |k, v|
-        v = HTTPigeon.redactor_string if hash_filter_keys.include?(k.to_s.downcase)
+        filter = log_filter_for(k)
+        redactor_string = filter.to_s.split('::')[1].presence || HTTPigeon.redactor_string
+        v = redact_hash_value(v, redactor_string) if filter.present?
 
         if v.is_a?(Hash)
           [k, redact_hash(v)]
@@ -39,15 +55,21 @@ module HTTPigeon
     end
 
     def redact_string(data)
-      string_filters.each do |filter|
-        data = if filter.sub_prefix.present?
-                 data.gsub(filter.pattern, "#{filter.sub_prefix}#{HTTPigeon.redactor_string}")
-               else
-                 data.gsub(filter.pattern, filter.replacement)
-               end
+      log_filters.each do |filter|
+        pattern, replacement = filter.split('::')
+
+        data = data.gsub(regex(pattern), replacement) if replacement.present?
       end
 
       data
+    end
+
+    def log_filter_for(key)
+      log_filters.detect { |k| regex(k.split('::').first).match?(key) }
+    end
+
+    def regex(pattern)
+      Regexp.new(pattern, Regexp::IGNORECASE)
     end
   end
 end

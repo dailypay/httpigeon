@@ -3,7 +3,7 @@ require_relative "../test_helper"
 class HTTPigeon::LoggerTest < HTTPigeon::TestCase
   describe '#new' do
     context 'when a custom log redactor is defined' do
-      it 'uses the HTTPigeon redactor' do
+      it 'uses the custom redactor' do
         HTTPigeon.stub(:log_redactor, :my_custom_log_redactor) do
           logger = HTTPigeon::Logger.new
 
@@ -15,14 +15,11 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
     context 'when a custom log redactor is not defined' do
       it 'uses the HTTPigeon redactor' do
         filter_keys = [:key_1, :key_2]
-        log_filters = [HTTPigeon::Filter.new(:hash, :key_3), HTTPigeon::Filter.new(:string, /key_4=[0-9a-z]*/i)]
 
         HTTPigeon.stub(:log_redactor, nil) do
-          logger = HTTPigeon::Logger.new(additional_filter_keys: filter_keys, log_filters: log_filters)
+          logger = HTTPigeon::Logger.new(log_filters: filter_keys)
 
           assert_instance_of HTTPigeon::LogRedactor, logger.log_redactor
-          assert_equal %w[key_1 key_2 key_3], logger.log_redactor.hash_filter_keys
-          assert_equal [log_filters.last], logger.log_redactor.string_filters
         end
       end
     end
@@ -31,7 +28,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
   describe '#log' do
     let(:event_type) { nil }
     let(:filter_keys) { %w[account_number ssn X-Subscription-Key x-api-token] }
-    let(:logger) { HTTPigeon::Logger.new(event_type: event_type, additional_filter_keys: filter_keys) }
+    let(:logger) { HTTPigeon::Logger.new(event_type: event_type, log_filters: filter_keys) }
     let(:error) { TypeError.new('Not my type') }
     let(:base_data) { { something: 'important', error: error } }
     let(:response_status) { 200 }
@@ -62,7 +59,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         request: {
           method: 'post',
           url: 'http://example.com/home',
-          headers: { 'X-Request-Id' => 'abc-012-xyz-789', 'X-Subscription-Key' => '[FILTERED]', 'X-API-Token' => '[FILTERED]' },
+          headers: { 'X-Request-Id' => 'abc-012-xyz-789', 'X-Subscription-Key' => 'super...[FILTERED]', 'X-API-Token' => 'super-...[FILTERED]' },
           body: { foo: 'barzz' },
           host: 'example.com',
           path: 'home'
@@ -90,7 +87,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
     context 'when the response body is valid JSON' do
       let(:event_type) { 'custom.event' }
       let(:response_body) { { account_number: '0000000100100011', ssn: '123-45-6789', ifdis: 'dendat' } }
-      let(:filtered_response_body) { { account_number: '[FILTERED]', ssn: '[FILTERED]', ifdis: 'dendat' } }
+      let(:filtered_response_body) { { account_number: '00000...[FILTERED]', ssn: '123...[FILTERED]', ifdis: 'dendat' } }
 
       context 'when there is a custom event logger' do
         before do
@@ -102,14 +99,11 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         after { HTTPigeon::LoggerTest.send :remove_const, "MyCustomLogger" }
 
         it 'logs the filtered payload using the custom event logger' do
-          logger_mock = Minitest::Mock.new
-          logger_mock.expect(:call, nil, [log_payload.merge(event_type: event_type)])
+          on_log = ->(payload) { assert_equal payload, log_payload.merge(event_type: event_type) }
 
           HTTPigeon.stub(:event_logger, MyCustomLogger.new) do
-            HTTPigeon.event_logger.stub(:log, logger_mock) do
+            HTTPigeon.event_logger.stub(:log, on_log) do
               logger.log(faraday_env, base_data)
-
-              assert_mock logger_mock
             end
           end
         end

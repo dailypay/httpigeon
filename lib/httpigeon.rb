@@ -2,7 +2,6 @@ require "active_support/core_ext/module/delegation"
 
 require "httpigeon/configuration"
 require "httpigeon/version"
-require "httpigeon/filter"
 require "httpigeon/log_redactor"
 require "httpigeon/logger"
 require "httpigeon/request"

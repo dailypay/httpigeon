@@ -30,11 +30,10 @@ module HTTPigeon
 
     delegate :status, :body, to: :response, prefix: true
 
-    def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, filter_keys: nil, log_filters: nil)
+    def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil)
       @base_url = base_url
       @event_type = event_type
-      @filter_keys = filter_keys || []
-      @log_filters = log_filters
+      @log_filters = log_filters || []
       @logger = logger || default_logger
 
       request_headers = default_headers.merge(headers.to_h)
@@ -68,7 +67,7 @@ module HTTPigeon
 
     private
 
-    attr_reader :path, :logger, :event_type, :filter_keys, :log_filters
+    attr_reader :path, :logger, :event_type, :log_filters
 
     def parse_response
       JSON.parse(response_body).with_indifferent_access unless response_body.empty?
@@ -77,7 +76,7 @@ module HTTPigeon
     end
 
     def default_logger
-      HTTPigeon::Logger.new(event_type: event_type, additional_filter_keys: filter_keys, log_filters: log_filters)
+      HTTPigeon::Logger.new(event_type: event_type, log_filters: log_filters)
     end
 
     def default_headers

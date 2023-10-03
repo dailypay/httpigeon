@@ -5,12 +5,9 @@ module HTTPigeon
   class Logger
     attr_reader :event_type, :log_redactor, :start_time, :end_time
 
-    def initialize(event_type: nil, additional_filter_keys: nil, log_filters: nil)
+    def initialize(event_type: nil, log_filters: nil)
       @event_type = event_type || HTTPigeon.default_event_type
-
-      hash_filters, string_filters = (log_filters || []).partition { |filter| filter.type.to_sym == :hash }
-      hash_filter_keys = HTTPigeon.default_filter_keys + additional_filter_keys.to_a + hash_filters.map(&:pattern)
-      @log_redactor = HTTPigeon.log_redactor || HTTPigeon::LogRedactor.new(hash_filter_keys: hash_filter_keys, string_filters: string_filters)
+      @log_redactor = HTTPigeon.log_redactor || HTTPigeon::LogRedactor.new(log_filters: HTTPigeon.default_filter_keys + log_filters)
     end
 
     def log(faraday_env, data = {})
@@ -40,16 +37,16 @@ module HTTPigeon
 
       log_data[:request] = {
         method: env.method,
-        url: env.url.to_s,
-        headers: filter(env.request_headers),
-        body: filter(env.request_body),
+        url: redact(env.url.to_s),
+        headers: redact(env.request_headers),
+        body: redact(env.request_body),
         host: env.url.host,
         path: env.url.path
       }
 
       log_data[:response] = {
-        headers: filter(env.response_headers),
-        body: filter(env.response_body),
+        headers: redact(env.response_headers),
+        body: redact(env.response_body),
         status: env.status
       }
 
@@ -71,13 +68,13 @@ module HTTPigeon
       log_data
     end
 
-    def filter(body)
-      return {} if body.blank?
+    def redact(data)
+      return {} if data.blank?
 
-      body = JSON.parse(body) if body.is_a?(String)
-      log_redactor.redact(body)
+      data = JSON.parse(data) if data.is_a?(String)
+      log_redactor.redact(data)
     rescue JSON::ParserError
-      log_redactor.redact(body)
+      log_redactor.redact(data)
     end
 
     def log_to_stdout(log_data)
