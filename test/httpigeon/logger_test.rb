@@ -59,7 +59,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         request: {
           method: 'post',
           url: 'http://example.com/home',
-          headers: { 'X-Request-Id' => 'abc-012-xyz-789', 'X-Subscription-Key' => 'super...[FILTERED]', 'X-API-Token' => 'super-...[FILTERED]' },
+          headers: { 'X-Request-Id' => 'abc-012-xyz-789', 'X-Subscription-Key' => 'sup...[FILTERED]', 'X-API-Token' => 'super-...[FILTERED]' },
           body: { foo: 'barzz' },
           host: 'example.com',
           path: 'home'
@@ -87,7 +87,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
     context 'when the response body is valid JSON' do
       let(:event_type) { 'custom.event' }
       let(:response_body) { { account_number: '0000000100100011', ssn: '123-45-6789', ifdis: 'dendat' } }
-      let(:filtered_response_body) { { account_number: '00000...[FILTERED]', ssn: '123...[FILTERED]', ifdis: 'dendat' } }
+      let(:filtered_response_body) { { account_number: '000...[FILTERED]', ssn: '123...[FILTERED]', ifdis: 'dendat' } }
 
       context 'when there is a custom event logger' do
         before do

@@ -14,7 +14,7 @@ class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
 
       it 'filters all elements' do
         HTTPigeon.stub(:redactor_string, '<redacted>') do
-          assert_equal [1, 'abc-123&key_3=<redacted>&xyz-789', { key_1: 'dupe...<redacted>', key_4: 'public-knowledge' }], redactor.redact(data)
+          assert_equal [1, 'abc-123&key_3=<redacted>&xyz-789', { key_1: 'dup...<redacted>', key_4: 'public-knowledge' }], redactor.redact(data)
         end
       end
     end
@@ -46,7 +46,7 @@ class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
 
       it 'filters all elements' do
         HTTPigeon.stub(:redactor_string, '<redacted>') do
-          expected = { key_1: 'dupe...<redacted>', key_4: 'public-knowledge', key_5: [{ key_2: 'duper...<redacted>' }, { key_3: 'also-public-knowledge' }] }
+          expected = { key_1: 'dup...<redacted>', key_4: 'public-knowledge', key_5: [{ key_2: 'duper...<redacted>' }, { key_3: 'also-public-knowledge' }] }
 
           assert_equal expected, redactor.redact(data)
         end

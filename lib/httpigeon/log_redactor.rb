@@ -26,15 +26,17 @@ module HTTPigeon
     def redact_hash_value(value, redactor_string)
       length = value.to_s.length
 
-      case
-      when length <= 4
+      return value unless length.positive?
+
+      case length
+      when 1..4
         redactor_string
-      when length <= 8
+      when 5..16
         "#{value.to_s[0..2]}...#{redactor_string}"
-      when length <= 32
-        "#{value.to_s[0..length/4]}...#{redactor_string}"
+      when 17..32
+        "#{value.to_s[0..(length / 4)]}...#{redactor_string}"
       else
-        "#{value.to_s[0..5]}...#{redactor_string}...#{value.to_s[-6..-1]}"
+        "#{value.to_s[0..5]}...#{redactor_string}...#{value.to_s[-6..]}"
       end
     end
 
