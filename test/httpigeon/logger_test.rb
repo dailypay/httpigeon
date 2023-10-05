@@ -27,7 +27,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
 
   describe '#log' do
     let(:event_type) { nil }
-    let(:filter_keys) { %w[account_number ssn::[FILTERED] X-Subscription-Key x-api-token] }
+    let(:filter_keys) { %w[account_number ssn::[FILTERED] X-Subscription-Key x-api-token (client_secret=)([0-9a-z]+)*] }
     let(:logger) { HTTPigeon::Logger.new(event_type: event_type, log_filters: filter_keys) }
     let(:error) { TypeError.new('Not my type') }
     let(:base_data) { { something: 'important', error: error } }
@@ -38,7 +38,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
           method: 'post',
           url: OpenStruct.new(
             {
-              to_s: 'http://example.com/home',
+              to_s: 'http://example.com/home?client_id=client_007&client_secret=agent0047&dark_mode=true',
               host: 'example.com',
               path: 'home',
               scheme: 'https'
@@ -58,7 +58,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
         something: 'important',
         request: {
           method: 'post',
-          url: 'http://example.com/home',
+          url: 'http://example.com/home?client_id=client_007&client_secret=age...[FILTERED]&dark_mode=true',
           headers: { 'X-Request-Id' => 'abc-012-xyz-789', 'X-Subscription-Key' => 'sup...[FILTERED]', 'X-API-Token' => 'super-...[FILTERED]' },
           body: { foo: 'barzz' },
           host: 'example.com',

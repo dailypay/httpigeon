@@ -63,15 +63,15 @@ module HTTPigeon
       log_filters.each do |filter|
         pattern, replacement = filter.split('::')
 
-        if replacement.present?
-          data = data.gsub(regex(pattern), replacement)
-        else
-          data = data.gsub(regex(pattern)) do |sub|
-            captures = sub.match(pattern).captures
+        data = if replacement.present?
+                 data.gsub(regex(pattern), replacement)
+               else
+                 data.gsub(regex(pattern)) do |sub|
+                   captures = sub.match(pattern).captures
 
-            captures.present? ? captures[0] + redact_value(captures[1]) : sub
-          end
-        end
+                   captures.present? ? captures[0] + redact_value(captures[1]) : sub
+                 end
+               end
       end
 
       data
