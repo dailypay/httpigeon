@@ -3,39 +3,52 @@ require_relative "../test_helper"
 class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
   describe '#redact' do
     let(:data) { nil }
-    let(:log_filters) { %w[key_1 key_2 key_3=[0-9a-z]*::key_3=<redacted>] }
+    let(:log_filters) { %w[key_1::[FILTERED] key_2 key_3=[0-9a-z]*::key_3=<redacted> (key_5=)(\d+)*] }
 
     let(:redactor) do
       HTTPigeon::LogRedactor.new(log_filters: log_filters)
     end
 
     context 'when data is an array' do
-      let(:data) { [1, 'abc-123&key_3=supersecret007&xyz-789', { key_1: 'duper-secret', key_4: 'public-knowledge' }] }
+      let(:data) { [1, 'abc=123&key_3=supersecret007&xyz=789&key_5=000100100011', { key_1: 'duper-secret', key_4: 'public-knowledge' }] }
 
-      it 'filters all elements' do
+      it 'redacts all elements' do
         HTTPigeon.stub(:redactor_string, '<redacted>') do
-          assert_equal [1, 'abc-123&key_3=<redacted>&xyz-789', { key_1: 'dup...<redacted>', key_4: 'public-knowledge' }], redactor.redact(data)
+          assert_equal [1, 'abc=123&key_3=<redacted>&xyz=789&key_5=000...<redacted>', { key_1: '[FILTERED]', key_4: 'public-knowledge' }], redactor.redact(data)
         end
       end
     end
 
     context 'when data is a string' do
-      let(:data) { 'abc-123&key_3=supersecret007&xyz-789' }
+      let(:log_filters) { %w[key_3=[0-9a-z]*::key_3=<redacted> key_4] }
+      let(:data) { 'abc=123&key_3=supersecret007&xyz=789' }
 
       context 'when a replacement is defined' do
-        it 'filters the string' do
+        it 'redacts the string' do
           HTTPigeon.stub(:redactor_string, '<redacted>') do
-            assert_equal 'abc-123&key_3=<redacted>&xyz-789', redactor.redact(data)
+            assert_equal 'abc=123&key_3=<redacted>&xyz=789', redactor.redact(data)
           end
         end
       end
 
       context 'when a replacement is not defined' do
-        let(:log_filters) { %w[key_1 key_2 key_3=[0-9a-z]*] }
+        context 'and the pattern is not grouped' do
+          let(:log_filters) { %w[key_3=[0-9a-z]* key_4] }
 
-        it 'does not redact the string' do
-          HTTPigeon.stub(:redactor_string, '<redacted>') do
-            assert_equal data, redactor.redact(data)
+          it 'does not redact the string' do
+            HTTPigeon.stub(:redactor_string, '<redacted>') do
+              assert_equal data, redactor.redact(data)
+            end
+          end
+        end
+
+        context 'and the pattern is grouped' do
+          let(:log_filters) { %w[(key_3=)([0-9a-z]*) key_4] }
+
+          it 'does not redact the string' do
+            HTTPigeon.stub(:redactor_string, '<redacted>') do
+              assert_equal 'abc=123&key_3=sup...<redacted>&xyz=789', redactor.redact(data)
+            end
           end
         end
       end
@@ -44,9 +57,9 @@ class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
     context 'when data is a hash' do
       let(:data) { { key_1: 'duper-secret', key_4: 'public-knowledge', key_5: [{ key_2: 'duper-duper-secret' }, { key_3: 'also-public-knowledge' }] } }
 
-      it 'filters all elements' do
+      it 'redacts all elements' do
         HTTPigeon.stub(:redactor_string, '<redacted>') do
-          expected = { key_1: 'dup...<redacted>', key_4: 'public-knowledge', key_5: [{ key_2: 'duper...<redacted>' }, { key_3: 'also-public-knowledge' }] }
+          expected = { key_1: '[FILTERED]', key_4: 'public-knowledge', key_5: [{ key_2: 'duper...<redacted>' }, { key_3: 'also-public-knowledge' }] }
 
           assert_equal expected, redactor.redact(data)
         end

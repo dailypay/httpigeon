@@ -23,28 +23,31 @@ module HTTPigeon
 
     private
 
-    def redact_hash_value(value, redactor_string)
+    def redact_value(value)
       length = value.to_s.length
 
       return value unless length.positive?
 
       case length
       when 1..4
-        redactor_string
+        HTTPigeon.redactor_string
       when 5..16
-        "#{value.to_s[0..2]}...#{redactor_string}"
+        "#{value.to_s[0..2]}...#{HTTPigeon.redactor_string}"
       when 17..32
-        "#{value.to_s[0..(length / 4)]}...#{redactor_string}"
+        "#{value.to_s[0..(length / 4)]}...#{HTTPigeon.redactor_string}"
       else
-        "#{value.to_s[0..5]}...#{redactor_string}...#{value.to_s[-6..]}"
+        "#{value.to_s[0..5]}...#{HTTPigeon.redactor_string}...#{value.to_s[-6..]}"
       end
     end
 
     def redact_hash(data)
       data.to_h do |k, v|
         filter = log_filter_for(k)
-        redactor_string = filter.to_s.split('::')[1].presence || HTTPigeon.redactor_string
-        v = redact_hash_value(v, redactor_string) if filter.present?
+
+        if filter.present?
+          replacement = filter.split('::')[1].presence
+          v = replacement.present? ? replacement : redact_value(v)
+        end
 
         if v.is_a?(Hash)
           [k, redact_hash(v)]
@@ -60,7 +63,15 @@ module HTTPigeon
       log_filters.each do |filter|
         pattern, replacement = filter.split('::')
 
-        data = data.gsub(regex(pattern), replacement) if replacement.present?
+        if replacement.present?
+          data = data.gsub(regex(pattern), replacement)
+        else
+          data = data.gsub(regex(pattern)) do |sub|
+            captures = sub.match(pattern).captures
+
+            captures.present? ? captures[0] + redact_value(captures[1]) : sub
+          end
+        end
       end
 
       data
