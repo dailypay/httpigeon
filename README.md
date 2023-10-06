@@ -114,6 +114,13 @@ There are multiple ways to specify what keys (in Hash) or substrings (in URL or 
 - Simple regexp with a specified replacement (e.g "/account_number=\d+*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
 - Simple regexp without a specified replacement (e.g "/account_number=\d+*/") - will have no effect
 
+There are some ready-made, tokenized filter patterns available that you can take advantage of for **URI encoded Strings**:
+- HTTPigeon::FilterPatterns::EMAIL
+- HTTPigeon::FilterPatterns::PASSWORD
+- HTTPigeon::FilterPatterns::USERNAME
+- HTTPigeon::FilterPatterns::CLIENT_ID
+- HTTPigeon::FilterPatterns::CLIENT_SECRET
+
 ```ruby
 # Will truncate the value of any header or payload key matching access_token
 # Will replace the value of any header or payload key matching password with [REDACTED]
