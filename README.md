@@ -38,35 +38,22 @@ request.run(path: '/users/1')
 
 **Instantiating with customizable arguments:**
 ```ruby
-# @param type [Symbol, String] the type of object this filter will be applied to (:hash or :string)
-# @param pattern [Symbol, String, Regex] the exact key or pattern that should be redacted
-# @param sub_prefix [String] a prefix to be combined with the configured :redactor_string as the replacement for the sensitive data (default: nil)
-# @param replacement [String] a string to be used as the replacement for the sensitive data.
-#    If :sub_prefix is defined, this value will be ignored (default: nil)
-filter_1 = HTTPigeon::Filter.new(:hash, 'access_token')
-filter_2 = HTTPigeon::Filter.new(:string, /username=[0-9a-z]*/i, 'username=')
-filter_3 = HTTPigeon::Filter.new(:string, /password=[0-9a-z]*/i, nil, 'password=***')
-
 # @param base_url [String] the base URI
 # @param options [Hash] the Faraday connection options (default: {})
 # @param headers [Hash] the request headers (default: {})
 # @param adapter [Faraday::Adapter] the Faraday adapter (default: Net::HTTP)
 # @param logger [Logger] for logging request and response (default: HTTPigeon::Logger)
 # @param event_type [String] for filtering/scoping the logs (default: 'http.outbound')
-# @param filter_keys [Array<String, Symbol>] specifies keys in headers and body to be redacted before logging.
-#    Can only define keys for Hash payloads (default: [])
-# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+# @param log_filters [Array<Symbol, String>] specifies keys in URL, headers and body to be redacted before logging.
 #    Can define keys for both Hash and String payloads (default: [])
-# @note :filter_keys and :log_filters can both be specified but it is recommended to define all filters using :log_filters
-#    if you wish to filter both Hashes and Strings
-request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, filter_keys: [:ssn, :ip_address], log_filters: [filter_1, filter_2, filter_3])
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, log_filters: [:api_key, 'access_token', '(client_id=)(\w+)'])
 request.run(path: '/users/1')
 ```
 
 **Passing a custom logger:**
 
 Your custom logger must respond to `#log` and be a registered Faraday Middleware. It can optionally implement `#on_request_start` and `#on_request_finish`, if you wanted to take certain actions right before and right after a request round-trip (e.g capturing latency).
-Note that if you pass a custom logger, you would have to handle redacting sensitive keys even if you pass a `filter_keys` list, unless you subclass `HTTPigeon::Logger`.
+Note that if you pass a custom logger, you would have to handle redacting sensitive keys even if you pass a `log_filters` list, unless you subclass `HTTPigeon::Logger`.
 ```ruby
 # The default Rails logger is registered/recognized by Faraday
 class CustomLogger < Logger
@@ -105,7 +92,37 @@ request.run(path: '/users/1')
 
 **Using the default logger:**
 
-To use the default logger (`HTTPigeon::Logger`), simply pass a custom `:filter_keys`, `:log_filters` and `:event_type` args, if necessary, and you're all set.
+***Event Type***
+
+The default logger always adds an `:event_type` key to the log payload that can be used as another filtering/grouping mechanism when querying logs. The default value is 'http.outbound'. To set a different value for a specific request, simply pass the key like so:
+```ruby
+HTTPigeon::Request.new(base_url: 'https://dummyjson.com', event_type: 'custom.event')
+```
+
+***Log Filters***
+
+Prior to logging, the default logger will always run it's redactor through:
+- The request full request **URL**
+- The request and response **headers**
+- the request and response **body**
+
+There are multiple ways to specify what keys (in Hash) or substrings (in URL or in URI encoded payload) you want redacted
+- Simple symbol or string literal (e.g :access_token, "api-key") - will truncate the value of the **hash** key based on it's length
+- Simple string literal with a specified replacement (e.g "password::[REDACTED]") - will replace the value of the **hash** key with `[REDACTED]`
+- Tokenized regexp (e.g "/(account_number=)(\d+)*/") - will truncate the second token of the **matching substring** based on it's length
+- Tokenized regexp with a specified replacement (e.g "/(account_number=)(\d+)*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
+- Simple regexp with a specified replacement (e.g "/account_number=\d+*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
+- Simple regexp without a specified replacement (e.g "/account_number=\d+*/") - will have no effect
+
+```ruby
+# Will truncate the value of any header or payload key matching access_token
+# Will replace the value of any header or payload key matching password with [REDACTED]
+# Will truncate the value of any request param URI encoded payload key matching client_id
+# Will replace the value of any request param URI encoded payload key matching password with [REDACTED]
+HTTPigeon::Request.new(base_url: 'https://dummyjson.com', log_filters: %w[access_token password::[REDACTED] /(client_id=)([0-9a-z]+)*/ /password=\w+/::[REDACTED]])
+```
+
+NOTE: Only ignore case regexp flag is currently supported and is already applied automatically
 
 **Running a request:**
 
@@ -131,7 +148,7 @@ request.response_body
 # @param query [Hash] the request query params (default: {})
 # @param headers [Hash] the request headers (default: {})
 # @param event_type [String] the event type for logs grouping (default: 'http.outbound')
-# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+# @param log_filters [Array<Symbol, String>] specifies keys in headers and body to be redacted before logging.
 # @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
 response = HTTPigeon::Request.get(endpoint, query, headers, event_type, log_filters)
 
@@ -139,7 +156,7 @@ response = HTTPigeon::Request.get(endpoint, query, headers, event_type, log_filt
 # @param payload [Hash] the request payload/body (default: {})
 # @param headers [Hash] the request headers (default: {})
 # @param event_type [String] the event type for logs grouping (default: 'http.outbound')
-# @param log_filters [Array<HTTPigeon::Filter, Object>] specifies keys in headers and body to be redacted before logging.
+# @param log_filters [Array<Symbol, String>] specifies keys in headers and body to be redacted before logging.
 # @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
 response = HTTPigeon::Request.post(endpoint, payload, headers, event_type, log_filters)
 ```

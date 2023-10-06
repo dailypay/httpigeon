@@ -27,7 +27,7 @@ class HTTPigeon::LoggerTest < HTTPigeon::TestCase
 
   describe '#log' do
     let(:event_type) { nil }
-    let(:filter_keys) { %w[account_number ssn::[FILTERED] X-Subscription-Key x-api-token (client_secret=)([0-9a-z]+)*] }
+    let(:filter_keys) { %w[account_number ssn::[FILTERED] X-Subscription-Key x-api-token /(client_secret=)([0-9a-z]+)*/] }
     let(:logger) { HTTPigeon::Logger.new(event_type: event_type, log_filters: filter_keys) }
     let(:error) { TypeError.new('Not my type') }
     let(:base_data) { { something: 'important', error: error } }
