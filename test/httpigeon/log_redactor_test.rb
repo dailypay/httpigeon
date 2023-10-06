@@ -71,7 +71,7 @@ class HTTPigeon::LogRedactorTest < HTTPigeon::TestCase
       let(:data) { 'abc=123&key_3=supersecret007&xyz=789' }
 
       it 'raises an error' do
-        error = assert_raises(HTTPigeon::LogRedactor::InvalidRegexError) { redactor.redact(data) }
+        error = assert_raises(HTTPigeon::LogRedactor::UnsupportedRegexpError) { redactor.redact(data) }
 
         assert_equal 'The specified regexp is invalid: /key_3=[0-9a-z]*/im. NOTE: Only ignore case (/i) is currently supported.', error.message
       end

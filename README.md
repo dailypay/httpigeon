@@ -148,7 +148,7 @@ request.response_body
 # @param query [Hash] the request query params (default: {})
 # @param headers [Hash] the request headers (default: {})
 # @param event_type [String] the event type for logs grouping (default: 'http.outbound')
-# @param log_filters [Array<Symbol, String>] specifies keys in headers and body to be redacted before logging.
+# @param log_filters [Array<Symbol, String>] specifies keys in URL, headers and body to be redacted before logging.
 # @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
 response = HTTPigeon::Request.get(endpoint, query, headers, event_type, log_filters)
 
@@ -156,7 +156,7 @@ response = HTTPigeon::Request.get(endpoint, query, headers, event_type, log_filt
 # @param payload [Hash] the request payload/body (default: {})
 # @param headers [Hash] the request headers (default: {})
 # @param event_type [String] the event type for logs grouping (default: 'http.outbound')
-# @param log_filters [Array<Symbol, String>] specifies keys in headers and body to be redacted before logging.
+# @param log_filters [Array<Symbol, String>] specifies keys in URL, headers and body to be redacted before logging.
 # @return [HTTPigeon::Response] an object with attributes :request [HTTPigeon::Request], :parsed_response [Hash], and :raw_response [Faraday::Response]
 response = HTTPigeon::Request.post(endpoint, payload, headers, event_type, log_filters)
 ```

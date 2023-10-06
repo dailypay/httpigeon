@@ -2,7 +2,7 @@ require "active_support/core_ext/hash"
 
 module HTTPigeon
   class LogRedactor
-    class InvalidRegexError < StandardError; end
+    class UnsupportedRegexpError < StandardError; end
 
     attr_reader :log_filters
 
@@ -88,7 +88,7 @@ module HTTPigeon
     def regex_for(pattern)
       regexp_literal = (pattern.match %r{^(/)(.*)(/(i?))$}).to_a[2].to_s
 
-      raise InvalidRegexError, "The specified regexp is invalid: #{pattern}. NOTE: Only ignore case (/i) is currently supported." if regexp_literal.blank?
+      raise UnsupportedRegexpError, "The specified regexp is invalid: #{pattern}. NOTE: Only ignore case (/i) is currently supported." if regexp_literal.blank?
 
       Regexp.new(regexp_literal, Regexp::IGNORECASE)
     end
