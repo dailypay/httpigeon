@@ -102,7 +102,7 @@ HTTPigeon::Request.new(base_url: 'https://dummyjson.com', event_type: 'custom.ev
 ***Log Filters***
 
 Prior to logging, the default logger will always run it's redactor through:
-- The request full request **URL**
+- The full request **URL**
 - The request and response **headers**
 - the request and response **body**
 
@@ -114,12 +114,15 @@ There are multiple ways to specify what keys (in Hash) or substrings (in URL or 
 - Simple regexp with a specified replacement (e.g "/account_number=\d+*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
 - Simple regexp without a specified replacement (e.g "/account_number=\d+*/") - will have no effect
 
-There are some ready-made, tokenized filter patterns available that you can take advantage of for **URI encoded Strings**:
-- HTTPigeon::FilterPatterns::EMAIL
-- HTTPigeon::FilterPatterns::PASSWORD
-- HTTPigeon::FilterPatterns::USERNAME
-- HTTPigeon::FilterPatterns::CLIENT_ID
-- HTTPigeon::FilterPatterns::CLIENT_SECRET
+***NOTES:***
+- A replacement is whatever comes after the `::` separator
+- Only ignore case regexp flag (`/i`) is currently supported and is already applied by default
+- There are some ready-made, tokenized filter patterns available that you can take advantage of for **URI encoded Strings**:
+  - HTTPigeon::FilterPatterns::EMAIL
+  - HTTPigeon::FilterPatterns::PASSWORD
+  - HTTPigeon::FilterPatterns::USERNAME
+  - HTTPigeon::FilterPatterns::CLIENT_ID
+  - HTTPigeon::FilterPatterns::CLIENT_SECRET
 
 ```ruby
 # Will truncate the value of any header or payload key matching access_token
@@ -129,13 +132,11 @@ There are some ready-made, tokenized filter patterns available that you can take
 HTTPigeon::Request.new(base_url: 'https://dummyjson.com', log_filters: %w[access_token password::[REDACTED] /(client_id=)([0-9a-z]+)*/ /password=\w+/::[REDACTED]])
 ```
 
-NOTE: Only ignore case regexp flag is currently supported and is already applied automatically
-
 **Running a request:**
 
 * You can pass a block to further customize a specific request:
 ```ruby
-request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', logger: CustomLogger.new)
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com')
 
 # Returns a Hash (parsed JSON) response or a String if the original response was not valid JSON
 request.run(path: '/users/1') { |request| request.headers['X-Request-Signature'] = Base64.encode64("#{method}::#{path}") }
