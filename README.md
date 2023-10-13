@@ -14,9 +14,9 @@ HTTPigeon.configure do |config|
   config.redactor_string = # Set a string that should be used as the replacement when redacting sensitive data. Default: '[FILTERED]'
   config.log_redactor = # Specify an object to be used for redacting data before logging. Must respond to #redact(data<Hash, String>). Default: nil
   config.event_logger = # Specify an object to be used for logging request roundtrip events. Default: $stdout
-  config.auto_generate_request_id = # Auto-generate a uuid for each request and store in a 'X-Request-Id' header?
-  config.exception_notifier = # Specify an object to be used for reporting errors. Must respond to #notify_exception(e<Exception>)
-  config.notify_all_exceptions = # Do you want these errors to actually get reported/notified?
+  config.auto_generate_request_id = # Auto-generate a uuid for each request and store in a 'X-Request-Id' header? Default: true
+  config.exception_notifier = # Specify an object to be used for reporting errors. Must respond to #notify_exception(e<Exception>). Must be defined if :notify_all_exceptions is true
+  config.notify_all_exceptions = # Do you want these errors to actually get reported/notified? Default: false
 end
 ```
 
