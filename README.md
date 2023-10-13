@@ -101,23 +101,30 @@ HTTPigeon::Request.new(base_url: 'https://dummyjson.com', event_type: 'custom.ev
 
 ***Log Filters***
 
+> [!IMPORTANT]  
+> - Log filtering mechanism does partial redaction by default, unless the value is **4 characters or less**. To have a value fully redacted, you have to explicitly append a replacement to the filter, separated by a `::` (e.g `'ssn::[REDACTED]'`). 
+> - Hash log filters are case insensitive   
+> - Only ignore case regexp flag (`/i`) is currently supported for log filters and is already applied by default
+
 Prior to logging, the default logger will always run it's redactor through:
 - The full request **URL**
 - The request and response **headers**
 - the request and response **body**
 
-There are multiple ways to specify what keys (in Hash) or substrings (in URL or in URI encoded payload) you want redacted
-- Simple symbol or string literal (e.g :access_token, "api-key") - will truncate the value of the **hash** key based on it's length
-- Simple string literal with a specified replacement (e.g "password::[REDACTED]") - will replace the value of the **hash** key with `[REDACTED]`
-- Tokenized regexp (e.g "/(account_number=)(\d+)*/") - will truncate the second token of the **matching substring** based on it's length
-- Tokenized regexp with a specified replacement (e.g "/(account_number=)(\d+)*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
-- Simple regexp with a specified replacement (e.g "/account_number=\d+*/::[REDACTED]") - will replace the second token of the **matching substring** with `[REDACTED]`
-- Simple regexp without a specified replacement (e.g "/account_number=\d+*/") - will have no effect
+**Examples:**
 
-***NOTES:***
-- A replacement is whatever comes after the `::` separator
-- Only ignore case regexp flag (`/i`) is currently supported and is already applied by default
-- There are some ready-made, tokenized filter patterns available that you can take advantage of for **URI encoded Strings**:
+Examples assume you set `:redactor_string` in your initializer to `[REDACTED]`
+
+| Filter | Target | Pre-redaction | Post-redaction | Notes |
+| --- | --- | --- | --- | ----- |
+| `"email"` OR `:email` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "atu...[REDACTED]" }` | Filters will get applied to nested objects as well. There's no limit on depth |
+| `"email::[REDACTED]"` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "[REDACTED]" }` | Replacement can be whatever you want and is applied as-is |
+| `"/email/"` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "atuny0@sohu.com" }` | Regex filters will not get applied to hash keys. This is a design decision to prevent bugs |
+| `"/(email=)(.*\\.[a-z]+)(&\|$)/"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atu...[REDACTED]` | Regex filters must be in proper regex format but wrapped in a string. If no replacement is specified, [regex grouping](https://learn.microsoft.com/en-us/dotnet/standard/base-types/grouping-constructs-in-regular-expressions) MUST be used |
+| `"/email=.*\\.[a-z]+(&\|$)/::email=[REDACTED]"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=[REDACTED]` | Replacement can be whatever you want and is applied as-is. No need to use regex grouping when explicitly specifying a replacement |
+| `"(email=)(.*\\.[a-z]+)(&\|$)"` OR `"email"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atuny0@sohu.com` | String filters must be defined in proper regex format, otherwise they will be ignored. This is a design descision to prevent bugs |
+
+There are some ready-made, tokenized filter patterns available that you can take advantage of for **URLs** and/or **URI encoded requests**:
   - HTTPigeon::FilterPatterns::EMAIL
   - HTTPigeon::FilterPatterns::PASSWORD
   - HTTPigeon::FilterPatterns::USERNAME
@@ -129,7 +136,7 @@ There are multiple ways to specify what keys (in Hash) or substrings (in URL or 
 # Will replace the value of any header or payload key matching password with [REDACTED]
 # Will truncate the value of any request param URI encoded payload key matching client_id
 # Will replace the value of any request param URI encoded payload key matching password with [REDACTED]
-HTTPigeon::Request.new(base_url: 'https://dummyjson.com', log_filters: %w[access_token password::[REDACTED] /(client_id=)([0-9a-z]+)*/ /password=\w+/::[REDACTED]])
+HTTPigeon::Request.new(base_url: 'https://dummyjson.com', log_filters: %w[access_token password::[REDACTED] /(client_id=)([0-9a-z]+)*/ /password=\w+/::password=[REDACTED]])
 ```
 
 **Running a request:**
