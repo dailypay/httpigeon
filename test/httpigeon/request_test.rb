@@ -79,10 +79,10 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
         event_type = 'some.event'
         filter_keys = [:super_secret]
         logger_mock = Minitest::Mock.new
-        logger_mock.expect(:call, nil) { |args| args[:event_type] == event_type && args[:additional_filter_keys] == filter_keys }
+        logger_mock.expect(:call, nil) { |args| args[:event_type] == event_type && args[:log_filters] == filter_keys }
 
         HTTPigeon::Logger.stub(:new, logger_mock) do
-          request = HTTPigeon::Request.new(base_url: 'https://www.example.com', event_type: event_type, filter_keys: filter_keys)
+          request = HTTPigeon::Request.new(base_url: 'https://www.example.com', event_type: event_type, log_filters: filter_keys)
 
           assert_mock logger_mock
           assert_equal 'application/json', request.connection.headers['Accept']
@@ -94,7 +94,7 @@ class HTTPigeon::RequestTest < HTTPigeon::TestCase
       it 'uses the custom logger' do
         logger = Logger.new($stdout)
         logger_mock = Minitest::Mock.new
-        logger_mock.expect(:call, nil) { |args| args.keys == %i[event_type filter_keys] }
+        logger_mock.expect(:call, nil) { |args| args.keys == %i[event_type log_filters] }
 
         HTTPigeon::Logger.stub(:new, logger_mock) do
           HTTPigeon::Request.new(base_url: 'http://www.example.com', logger: logger)

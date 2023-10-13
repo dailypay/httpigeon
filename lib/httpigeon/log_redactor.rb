@@ -2,11 +2,12 @@ require "active_support/core_ext/hash"
 
 module HTTPigeon
   class LogRedactor
-    attr_reader :hash_filter_keys, :string_filters
+    class UnsupportedRegexpError < StandardError; end
 
-    def initialize(hash_filter_keys: nil, string_filters: nil)
-      @hash_filter_keys = (hash_filter_keys || []).map(&:to_s).map(&:downcase)
-      @string_filters = string_filters || []
+    attr_reader :log_filters
+
+    def initialize(log_filters: nil)
+      @log_filters = log_filters.to_a.map(&:to_s)
     end
 
     def redact(data)
@@ -24,9 +25,31 @@ module HTTPigeon
 
     private
 
+    def redact_value(value)
+      length = value.to_s.length
+
+      return value unless length.positive?
+
+      case length
+      when 1..4
+        HTTPigeon.redactor_string
+      when 5..16
+        "#{value.to_s[0..2]}...#{HTTPigeon.redactor_string}"
+      when 17..32
+        "#{value.to_s[0..(length / 4)]}...#{HTTPigeon.redactor_string}"
+      else
+        "#{value.to_s[0..5]}...#{HTTPigeon.redactor_string}...#{value.to_s[-6..]}"
+      end
+    end
+
     def redact_hash(data)
       data.to_h do |k, v|
-        v = HTTPigeon.redactor_string if hash_filter_keys.include?(k.to_s.downcase)
+        filter = hash_filter_for(k)
+
+        if filter.present?
+          replacement = filter.split('::')[1].presence
+          v = replacement.present? ? replacement : redact_value(v)
+        end
 
         if v.is_a?(Hash)
           [k, redact_hash(v)]
@@ -39,15 +62,35 @@ module HTTPigeon
     end
 
     def redact_string(data)
-      string_filters.each do |filter|
-        data = if filter.sub_prefix.present?
-                 data.gsub(filter.pattern, "#{filter.sub_prefix}#{HTTPigeon.redactor_string}")
+      log_filters.each do |filter|
+        pattern, replacement = filter.split('::')
+
+        next unless pattern.match?(%r{^/.*/([guysim]*)$})
+
+        data = if replacement.present?
+                 data.gsub(regex_for(pattern), replacement)
                else
-                 data.gsub(filter.pattern, filter.replacement)
+                 data.gsub(regex_for(pattern)) do |sub|
+                   captures = sub.match(regex_for(pattern))&.captures
+
+                   captures.present? ? captures[0] + redact_value(captures[1]) : sub
+                 end
                end
       end
 
       data
+    end
+
+    def hash_filter_for(key)
+      log_filters.detect { |k| k.split('::').first.downcase == key.to_s.downcase }
+    end
+
+    def regex_for(pattern)
+      regexp_literal = (pattern.match %r{^(/)(.*)(/(i?))$}).to_a[2].to_s
+
+      raise UnsupportedRegexpError, "The specified regexp is invalid: #{pattern}. NOTE: Only ignore case (/i) is currently supported." if regexp_literal.blank?
+
+      Regexp.new(regexp_literal, Regexp::IGNORECASE)
     end
   end
 end
