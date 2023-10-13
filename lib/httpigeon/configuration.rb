@@ -8,7 +8,7 @@ module HTTPigeon
       @redactor_string = '[FILTERED]'
       @log_redactor = nil
       @event_logger = nil
-      @auto_generate_request_id = false
+      @auto_generate_request_id = true
       @notify_all_exceptions = false
       @exception_notifier = nil
     end
