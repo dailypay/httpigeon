@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "httpigeon"
   spec.version = HTTPigeon::VERSION
   spec.authors = ["2k-joker"]
-  spec.email = ["khalil.kum@dailypay.com"]
+  spec.email = ["opensource@dailypay.com"]
   spec.licenses = ["MIT"]
 
   spec.summary = "Simple, easy way to make and log HTTP requests and responses"
