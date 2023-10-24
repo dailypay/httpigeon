@@ -70,7 +70,7 @@ module HTTPigeon
     attr_reader :path, :logger, :event_type, :log_filters
 
     def parse_response
-      JSON.parse(response_body).with_indifferent_access unless response_body.empty?
+      JSON.parse(response_body).with_indifferent_access
     rescue JSON::ParserError
       response_body.presence
     end

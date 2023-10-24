@@ -7,7 +7,7 @@ module HTTPigeon
 
     def initialize(event_type: nil, log_filters: nil)
       @event_type = event_type || HTTPigeon.default_event_type
-      @log_redactor = HTTPigeon.log_redactor || HTTPigeon::LogRedactor.new(log_filters: HTTPigeon.default_filter_keys + log_filters)
+      @log_redactor = HTTPigeon.log_redactor || HTTPigeon::LogRedactor.new(log_filters: HTTPigeon.default_filter_keys + log_filters.to_a)
     end
 
     def log(faraday_env, data = {})

@@ -33,11 +33,10 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activesupport", "~> 7.0.4"
 
   spec.add_development_dependency "rake", "~> 13.0"
-  spec.add_development_dependency "minitest", "~> 5.15"
-  spec.add_development_dependency "rubocop-minitest", "~> 0.31.0"
+  spec.add_development_dependency "rspec", "~> 3.4"
+  spec.add_development_dependency "simplecov"
   spec.add_development_dependency "rubocop", "~> 1.21"
   spec.add_development_dependency "pry", "~> 0.13.1"
-  spec.add_development_dependency "minitest-stub_any_instance", "~> 1.0.3"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html
