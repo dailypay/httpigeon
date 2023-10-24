@@ -182,7 +182,9 @@ RSpec/NestedGroups:
   Max: 5
 
 RSpec/FilePath:
-  Enabled: false
+  Exclude:
+    - spec/httpigeon/**/*.rb
 
 RSpec/SpecFilePathFormat:
-  Enabled: false
+  Exclude:
+    - spec/httpigeon/**/*.rb
