@@ -3,40 +3,40 @@ require 'spec_helper'
 describe HTTPigeon::Request do
   describe '.get' do
     it 'makes request with expected arguments' do
-      request_double = instance_double(HTTPigeon::Request, run: { hello: 'hi' }, response: 'faraday-response')
+      request_double = instance_double(described_class, run: { hello: 'hi' }, response: 'faraday-response')
       endpoint = 'https://dummyjson.com/users/search'
       query = { q: 'John' }
       event_type = 'some.event'
       headers = { 'Foo' => 'Barzzz' }
 
-      allow(HTTPigeon::Request).to receive(:new).and_return(request_double)
+      allow(described_class).to receive(:new).and_return(request_double)
 
-      response = HTTPigeon::Request.get(endpoint, query, headers, event_type)
+      response = described_class.get(endpoint, query, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
       expect(response.parsed_response).to eq({ hello: 'hi' })
       expect(response.raw_response).to eq('faraday-response')
-      expect(HTTPigeon::Request).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
+      expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
       expect(request_double).to have_received(:run).with(method: :get, path: '', payload: query)
     end
   end
 
   describe '.post' do
     it 'makes request with expected arguments' do
-      request_double = instance_double(HTTPigeon::Request, run: { hello: 'hi' }, response: 'faraday-response')
+      request_double = instance_double(described_class, run: { hello: 'hi' }, response: 'faraday-response')
       endpoint = 'https://dummyjson.com/users/add'
       payload = { firstName: 'John', lastName: 'Doe' }
       event_type = 'some.event'
       headers = { 'Foo' => 'Barzzz' }
 
-      allow(HTTPigeon::Request).to receive(:new).and_return(request_double)
+      allow(described_class).to receive(:new).and_return(request_double)
 
-      response = HTTPigeon::Request.post(endpoint, payload, headers, event_type)
+      response = described_class.post(endpoint, payload, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
       expect(response.parsed_response).to eq({ hello: 'hi' })
       expect(response.raw_response).to eq('faraday-response')
-      expect(HTTPigeon::Request).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
+      expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
       expect(request_double).to have_received(:run).with(method: :post, path: '', payload: payload)
     end
   end
@@ -60,7 +60,7 @@ describe HTTPigeon::Request do
 
       test_table.each do |test_case|
         allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
-        request = HTTPigeon::Request.new(base_url: 'https://www.example.com', headers: test_case[:request_headers], event_type: 'event.type', log_filters: [:super_secret])
+        request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers], event_type: 'event.type', log_filters: [:super_secret])
 
         expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
       end
@@ -69,15 +69,15 @@ describe HTTPigeon::Request do
     it 'uses the default logger if a custom logger is not provided' do
       allow(HTTPigeon::Logger).to receive(:new)
 
-      HTTPigeon::Request.new(base_url: 'https://www.example.com', event_type: 'event.type', log_filters: [:super_secret])
+      described_class.new(base_url: 'https://www.example.com', event_type: 'event.type', log_filters: [:super_secret])
 
       expect(HTTPigeon::Logger).to have_received(:new).with(event_type: 'event.type', log_filters: [:super_secret])
     end
 
-    it ' uses the custom logger if one if provided' do
+    it 'uses the custom logger if one if provided' do
       allow(HTTPigeon::Logger).to receive(:new)
 
-      HTTPigeon::Request.new(base_url: 'http://www.example.com', logger: Logger.new($stdout))
+      described_class.new(base_url: 'http://www.example.com', logger: Logger.new($stdout))
 
       expect(HTTPigeon::Logger).not_to have_received(:new)
     end
@@ -86,7 +86,7 @@ describe HTTPigeon::Request do
   describe '#run' do
     subject { request.run(method: method, path: '/users', payload: { email: 'email@example.com' }) }
 
-    let(:request) { HTTPigeon::Request.new(base_url: 'https://www.example.com') }
+    let(:request) { described_class.new(base_url: 'https://www.example.com') }
     let(:logger_double) { instance_double(HTTPigeon::Logger, log: true) }
 
     before do
@@ -107,7 +107,7 @@ describe HTTPigeon::Request do
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to eq({ email: 'email@example.com' }.to_json)
         expect(logger_double).to have_received(:log).with(any_args)
-        is_expected.to eq(JSON.parse(response_body).with_indifferent_access)
+        expect(subject).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
 
@@ -122,7 +122,7 @@ describe HTTPigeon::Request do
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to be_nil
         expect(logger_double).to have_received(:log).with(any_args)
-        is_expected.to eq(JSON.parse(response_body).with_indifferent_access)
+        expect(subject).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
   end

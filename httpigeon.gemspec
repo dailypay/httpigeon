@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rspec", "~> 3.4"
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "rubocop", "~> 1.21"
+  spec.add_development_dependency "rubocop-rspec", "~> 2.24"
   spec.add_development_dependency "pry", "~> 0.13.1"
 
   # For more information and examples about making a new gem, check out our

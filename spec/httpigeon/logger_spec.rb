@@ -12,7 +12,7 @@ describe HTTPigeon::Logger do
       specify { expect(subject.log_redactor).to eq(:my_custom_log_redactor) }
     end
 
-    context 'when a custom log redactor is defined' do
+    context 'when a custom log redactor is not defined' do
       let(:log_redactor) { nil }
 
       specify { expect(subject.log_redactor).to be_a(HTTPigeon::LogRedactor) }
@@ -85,7 +85,6 @@ describe HTTPigeon::Logger do
       let(:filtered_response_body) { { account_number: '000...[FILTERED]', ssn: '[FILTERED]', ifdis: 'dendat' } }
 
       context 'when there is a custom event logger' do
-
         it 'logs the filtered payload using the custom event logger' do
           custom_logger = double('my-custom-logger')
           allow(custom_logger).to receive(:log)
@@ -105,7 +104,7 @@ describe HTTPigeon::Logger do
 
           subject
 
-          expect(logger_double).to have_received(:log).with(*[1, log_payload.merge(event_type: event_type).to_json])
+          expect(logger_double).to have_received(:log).with(1, log_payload.merge(event_type: event_type).to_json)
         end
       end
     end
@@ -122,7 +121,7 @@ describe HTTPigeon::Logger do
 
         subject
 
-        expect(logger_double).to have_received(:log).with(*[1, log_payload.merge(event_type: HTTPigeon.default_event_type).to_json])
+        expect(logger_double).to have_received(:log).with(1, log_payload.merge(event_type: HTTPigeon.default_event_type).to_json)
       end
     end
 

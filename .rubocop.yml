@@ -1,5 +1,5 @@
 require:
-  - rubocop-minitest
+  - rubocop-rspec
 
 AllCops:
   TargetRubyVersion: 3.1.2
@@ -159,6 +159,30 @@ Gemspec/OrderedDependencies:
 Gemspec/RequireMFA:
   Enabled: false
 
-#### ::MINITEST ####
-Minitest/MultipleAssertions:
+#### ::RSPEC ####
+RSpec/ExampleLength:
+  Enabled: false
+
+RSpec/MultipleExpectations:
+  Max: 10
+
+RSpec/AnyInstance:
+  Enabled: false
+
+RSpec/VerifiedDoubles:
+  Enabled: false
+
+RSpec/NamedSubject:
+  Enabled: false
+
+RSpec/MultipleMemoizedHelpers:
+  Max: 10
+
+RSpec/NestedGroups:
   Max: 5
+
+RSpec/FilePath:
+  Enabled: false
+
+RSpec/SpecFilePathFormat:
+  Enabled: false

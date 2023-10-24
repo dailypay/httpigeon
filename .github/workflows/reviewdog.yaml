@@ -14,6 +14,6 @@ jobs:
         uses: reviewdog/action-rubocop@v2
         with:
           rubocop_version: gemfile
-          rubocop_extensions: rubocop-minitest:gemfile
+          rubocop_extensions: rubocop-rspec:gemfile
           reporter: github-pr-check
           fail_on_error: true

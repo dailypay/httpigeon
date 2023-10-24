@@ -43,7 +43,7 @@ describe HTTPigeon::LogRedactor do
             filters: %w[key_3=[0-9a-z]* key_4],
             data: 'abc=123&key_3=supersecret007&xyz=789',
             expected_result: 'abc=123&key_3=supersecret007&xyz=789'
-          },
+          }
         ]
       end
 
