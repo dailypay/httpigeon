@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe HTTPigeon::Logger do
-  describe '#new' do
+  describe '#log_redactor' do
     subject { described_class.new(log_filters: %w[filter_1 filter_2]) }
 
     before { allow(HTTPigeon).to receive(:log_redactor).and_return(log_redactor) }
