@@ -26,3 +26,4 @@ jobs:
     with:
       public_publish: 'true'
       private_publish: 'true'
+    secrets: inherit # implicitly forward secrets to called workflow
