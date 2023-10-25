@@ -2,16 +2,14 @@ name: Publish
 on:
   workflow_call:
     inputs:
-      publish:
+      public_publish:
         required: false
         type: string
         default: 'false'
-      gem_version:
-        required: true
+      private_publish:
+        required: false
         type: string
-      gem_name:
-        required: true
-        type: string
+        default: 'false'
 jobs:
   release:
     name: Release gem
@@ -19,23 +17,15 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
-      - uses: ruby/setup-ruby@v1
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1
-      - name: setup gem credentials
-        if: inputs.publish == 'true'
-        run: |
-          mkdir -p $HOME/.gem
-          touch $HOME/.gem/credentials
-          chmod 0600 $HOME/.gem/credentials
-          printf -- "---\n:github: Bearer ${GITHUB_TOKEN}\n" > $HOME/.gem/credentials
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      - name: get release version tag
-        if: inputs.publish == 'true'
-        run: echo "GEM_VERSION=${{ inputs.gem_version }}" >> $GITHUB_ENV
-      - name: Push to Rubygems
-        if: inputs.publish == 'true'
-        run: |
-          gem build "./${{ inputs.gem_name }}.gemspec"
-          gem push --verbose --key github --host https://rubygems.pkg.github.com/dailypay "${{ inputs.gem_name }}-${{ inputs.gem_version }}.gem"
+      - name: Publish gem
+        uses: dawidd6/action-publish-gem@v1
+        if: ${{ inputs.public_publish == 'true' || inputs.private_publish == 'true' }}
+        with:
+          # Optional, will publish to RubyGems if specified
+          api_key: ${{ inputs.public_publish == 'true' && secrets.RUBYGEMS_API_KEY }}
+          # Optional, will publish to GitHub Packages if specified
+          github_token: ${{ inputs.private_publish == 'true' && secrets.GITHUB_TOKEN }}
