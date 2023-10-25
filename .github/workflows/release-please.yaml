@@ -25,3 +25,4 @@ jobs:
     if: needs.release-please.outputs.release_created
     with:
       public_publish: 'true'
+      private_publish: 'true'
