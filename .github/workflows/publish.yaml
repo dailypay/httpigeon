@@ -21,11 +21,25 @@ jobs:
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1
-      - name: Publish gem
-        uses: dawidd6/action-publish-gem@v1
-        if: ${{ inputs.public_publish == 'true' || inputs.private_publish == 'true' }}
-        with:
-          # Optional, will publish to RubyGems if specified
-          api_key: ${{ inputs.public_publish == 'true' && secrets.RUBYGEMS_API_KEY }}
-          # Optional, will publish to GitHub Packages if specified
-          github_token: ${{ inputs.private_publish == 'true' && secrets.GITHUB_TOKEN }}
+      - name: Publish to GitHub
+        if: inputs.private_publish == 'true'
+        run: |
+          mkdir -p $HOME/.gem
+          touch $HOME/.gem/credentials
+          chmod 0600 $HOME/.gem/credentials
+          printf -- "---\n:github: Bearer ${GITHUB_TOKEN}\n" > $HOME/.gem/credentials
+          gem build *.gemspec
+          gem push --KEY github --host https://rubygems.pkg.github.com/dailypay *.gem
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish to RubyGems
+        if: inputs.public_publish == 'true'
+        run: |
+          mkdir -p $HOME/.gem
+          touch $HOME/.gem/credentials
+          chmod 0600 $HOME/.gem/credentials
+          printf -- "---\n:rubygems_api_key: ${RUBYGEMS_API_KEY}\n" > $HOME/.gem/credentials
+          gem build *.gemspec
+          gem push *.gem
+        env:
+          RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
