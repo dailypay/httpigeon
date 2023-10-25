@@ -172,9 +172,6 @@ RSpec/AnyInstance:
 RSpec/VerifiedDoubles:
   Enabled: false
 
-RSpec/NamedSubject:
-  Enabled: false
-
 RSpec/MultipleMemoizedHelpers:
   Max: 10
 

@@ -84,7 +84,7 @@ describe HTTPigeon::Request do
   end
 
   describe '#run' do
-    subject { request.run(method: method, path: '/users', payload: { email: 'email@example.com' }) }
+    subject(:run_request) { request.run(method: method, path: '/users', payload: { email: 'email@example.com' }) }
 
     let(:request) { described_class.new(base_url: 'https://www.example.com') }
     let(:logger_double) { instance_double(HTTPigeon::Logger, log: true) }
@@ -93,7 +93,7 @@ describe HTTPigeon::Request do
       allow(HTTPigeon::Logger).to receive(:new).and_return(logger_double)
       allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
 
-      subject
+      run_request
     end
 
     context 'when it is not a read request' do
@@ -107,7 +107,7 @@ describe HTTPigeon::Request do
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to eq({ email: 'email@example.com' }.to_json)
         expect(logger_double).to have_received(:log).with(any_args)
-        expect(subject).to eq(JSON.parse(response_body).with_indifferent_access)
+        expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
 
@@ -122,7 +122,7 @@ describe HTTPigeon::Request do
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to be_nil
         expect(logger_double).to have_received(:log).with(any_args)
-        expect(subject).to eq(JSON.parse(response_body).with_indifferent_access)
+        expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
   end

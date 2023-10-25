@@ -2,25 +2,25 @@ require 'spec_helper'
 
 describe HTTPigeon::Logger do
   describe '#log_redactor' do
-    subject { described_class.new(log_filters: %w[filter_1 filter_2]) }
+    subject(:log_redactor) { described_class.new(log_filters: %w[filter_1 filter_2]).log_redactor }
 
-    before { allow(HTTPigeon).to receive(:log_redactor).and_return(log_redactor) }
+    before { allow(HTTPigeon).to receive(:log_redactor).and_return(custom_log_redactor) }
 
     context 'when a custom log redactor is defined' do
-      let(:log_redactor) { :my_custom_log_redactor }
+      let(:custom_log_redactor) { :my_custom_log_redactor }
 
-      specify { expect(subject.log_redactor).to eq(:my_custom_log_redactor) }
+      specify { expect(log_redactor).to eq(:my_custom_log_redactor) }
     end
 
     context 'when a custom log redactor is not defined' do
-      let(:log_redactor) { nil }
+      let(:custom_log_redactor) { nil }
 
-      specify { expect(subject.log_redactor).to be_a(HTTPigeon::LogRedactor) }
+      specify { expect(log_redactor).to be_a(HTTPigeon::LogRedactor) }
     end
   end
 
   describe '#log' do
-    subject { described_class.new(event_type: event_type, log_filters: filter_keys).log(faraday_env, base_data) }
+    subject(:log) { described_class.new(event_type: event_type, log_filters: filter_keys).log(faraday_env, base_data) }
 
     let(:event_type) { nil }
     let(:filter_keys) { %w[account_number ssn::[FILTERED] X-Subscription-Key x-api-token /(client_secret=)([0-9a-z]+)*/] }
@@ -90,7 +90,7 @@ describe HTTPigeon::Logger do
           allow(custom_logger).to receive(:log)
           allow(HTTPigeon).to receive(:event_logger).and_return(custom_logger)
 
-          subject
+          log
 
           expect(custom_logger).to have_received(:log).with(log_payload.merge(event_type: event_type))
         end
@@ -102,7 +102,7 @@ describe HTTPigeon::Logger do
           allow(logger_double).to receive(:log)
           allow(Logger).to receive(:new).and_return(logger_double)
 
-          subject
+          log
 
           expect(logger_double).to have_received(:log).with(1, log_payload.merge(event_type: event_type).to_json)
         end
@@ -119,7 +119,7 @@ describe HTTPigeon::Logger do
         allow(logger_double).to receive(:log)
         allow(Logger).to receive(:new).and_return(logger_double)
 
-        subject
+        log
 
         expect(logger_double).to have_received(:log).with(1, log_payload.merge(event_type: HTTPigeon.default_event_type).to_json)
       end
@@ -138,7 +138,7 @@ describe HTTPigeon::Logger do
       it 'notifies exception if :notify_all_exceptions is on' do
         allow(HTTPigeon).to receive(:notify_all_exceptions).and_return(true)
 
-        subject
+        log
 
         expect(notifier_double).to have_received(:notify_exception).with(an_instance_of(NoMethodError))
       end
@@ -146,7 +146,7 @@ describe HTTPigeon::Logger do
       it 'does not notify exception if :notify_all_exceptions is off' do
         allow(HTTPigeon).to receive(:notify_all_exceptions).and_return(false)
 
-        subject
+        log
 
         expect(notifier_double).not_to have_received(:notify_exception)
       end
@@ -154,7 +154,7 @@ describe HTTPigeon::Logger do
   end
 
   describe '#on_request_start' do
-    subject { logger.on_request_start }
+    subject(:on_request_start) { logger.on_request_start }
 
     let(:logger) { described_class.new }
 
@@ -162,14 +162,14 @@ describe HTTPigeon::Logger do
       current_time = Time.current
       allow(Time).to receive(:current).and_return(current_time)
 
-      subject
+      on_request_start
 
       expect(logger.start_time).to eq(current_time)
     end
   end
 
   describe '#on_request_finish' do
-    subject { logger.on_request_finish }
+    subject(:on_request_finish) { logger.on_request_finish }
 
     let(:logger) { described_class.new }
 
@@ -177,7 +177,7 @@ describe HTTPigeon::Logger do
       current_time = Time.current
       allow(Time).to receive(:current).and_return(current_time)
 
-      subject
+      on_request_finish
 
       expect(logger.end_time).to eq(current_time)
     end
