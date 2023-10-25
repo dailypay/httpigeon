@@ -1,5 +1,8 @@
 name: release-please
-on: [pull_request]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   release-please:
@@ -19,8 +22,8 @@ jobs:
   publish-gem:
     uses: ./.github/workflows/publish.yaml
     needs: [ release-please ]
-    # if: needs.release-please.outputs.release_created
+    if: needs.release-please.outputs.release_created
     with:
       public_publish: 'true'
-      private_publish: 'false'
+      private_publish: 'true'
     secrets: inherit # implicitly forward secrets to called workflow
