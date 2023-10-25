@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.0.0](https://github.com/dailypay/httpigeon/compare/v1.3.0...v2.0.0) (2023-10-25)
+
+
+### ⚠ BREAKING CHANGES
+
+* **logging:** Improve redaction mechanism ([#23](https://github.com/dailypay/httpigeon/issues/23))
+
+### Features
+
+* Generate request ID header by default ([#25](https://github.com/dailypay/httpigeon/issues/25)) ([c2aa078](https://github.com/dailypay/httpigeon/commit/c2aa078947c422f544ff1b36d77576a2a3681d08))
+* **logging:** Improve redaction mechanism ([#23](https://github.com/dailypay/httpigeon/issues/23)) ([ce090bd](https://github.com/dailypay/httpigeon/commit/ce090bd0124ef3f3ec616d7c0af5a4652be11b0a))
+
 ## [1.3.0](https://github.com/dailypay/httpigeon/compare/v1.2.1...v1.3.0) (2023-08-24)
 
 
