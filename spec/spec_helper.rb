@@ -41,4 +41,5 @@ RSpec.configure do |config|
 
   # Randomize tests order to better isolate flaky tests
   config.order = :random
+  Kernel.srand config.seed
 end
