@@ -1,4 +1,4 @@
-# HTTPigeon
+# HTTPigeon [![Gem Version](https://badge.fury.io/rb/httpigeon.svg)](https://badge.fury.io/rb/httpigeon)
 
 As early as 2000 years ago, and as late as 20 years ago, messenger pigeons (a.k.a homing pigeons) were an established and reliable means of long distance communication. This library is dedicated to messenger pigeons and all their contributions towards ancient and modern civilization ❤️.
 
