@@ -21,12 +21,18 @@ end
 ```
 
 **Instantiating with a block:**
+
+- **NOTE:** This pretty much works the same way as passing a block to `Faraday.new`. Any config you can use with `Faraday` directly, you can do with `HTTPigeon::Request`
+
 ```ruby
+require "faraday/retry"
+
 # @option [String] base_url the base URI (required)
-request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com') do |connection|
-  # connection is an instance of Faraday::Connection
-  connection.headers['foo'] = 'barzzz'
-  connection.options['timeout'] = 15
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com') do |config|
+  # config is an instance of Faraday::Connection
+  config.headers['foo'] = 'barzzz'
+  config.options['timeout'] = 15
+  config.request :retry, { max: 5 }
   ...
 end
 

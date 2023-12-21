@@ -42,44 +42,140 @@ describe HTTPigeon::Request do
   end
 
   describe '#new' do
-    it 'sets the expected default headers' do
-      allow(SecureRandom).to receive(:uuid).and_return('secure-random-uuid')
+    let(:custom_logger_klass) { double('some-custom-logger-klass') }
 
-      test_table = [
-        { # when auto generate request id is turned off
-          auto_generate_request_id: false,
-          request_headers: { 'Foo' => 'barzz' },
-          included_headers: { 'Accept' => 'application/json', 'Foo' => 'barzz' }
-        },
-        { # when auto generate request id is turned on
-          auto_generate_request_id: true,
-          request_headers: { 'Foo' => 'barzz' },
-          included_headers: { 'Accept' => 'application/json', 'X-Request-Id' => 'secure-random-uuid', 'Foo' => 'barzz' }
-        }
-      ]
+    before do
+      logger_instance = double('instance-of-custom-logger')
 
-      test_table.each do |test_case|
-        allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
-        request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers], event_type: 'event.type', log_filters: [:super_secret])
+      allow(logger_instance).to receive(:is_a?).with(HTTPigeon::Logger).and_return(true)
+      allow(custom_logger_klass).to receive(:new).and_return(logger_instance)
+    end
 
-        expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
+    context 'when a block is given' do
+      it 'sets the expected default headers' do
+        allow(SecureRandom).to receive(:uuid).and_return('secure-random-uuid')
+
+        test_table = [
+          { # when auto generate request id is turned off
+            auto_generate_request_id: false,
+            request_headers: { 'Foo' => 'barzz' },
+            included_headers: { 'Accept' => 'application/json', 'Foo' => 'barzz' }
+          },
+          { # when auto generate request id is turned on
+            auto_generate_request_id: true,
+            request_headers: { 'Foo' => 'barzz' },
+            included_headers: { 'Accept' => 'application/json', 'X-Request-Id' => 'secure-random-uuid', 'Foo' => 'barzz' }
+          }
+        ]
+
+        test_table.each do |test_case|
+          allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
+
+          request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers]) do |conn|
+            conn.request :json
+            conn.response :json
+          end
+
+          expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
+        end
+      end
+
+      it 'sets the request options if provided' do
+        request = described_class.new(base_url: 'https://www.example.com', options: { timeout: 10 }) do |conn|
+          conn.request :json
+          conn.response :json
+        end
+
+        expect(request.connection.options.timeout).to eq(10)
+      end
+
+      it 'does not use the default logger if a custom logger is not provided' do
+        allow(HTTPigeon::Logger).to receive(:new)
+
+        described_class.new(base_url: 'https://www.example.com') do |conn|
+          conn.request :json
+          conn.response :json
+        end
+
+        expect(HTTPigeon::Logger).not_to have_received(:new)
+      end
+
+      it 'sets the custom :httpigeon_logger if provided and is a type of httpigeon logger' do
+        allow(HTTPigeon::Logger).to receive(:new)
+
+        request = described_class.new(base_url: 'https://www.example.com', logger: custom_logger_klass.new) do |conn|
+          conn.request :json
+          conn.response :json
+        end
+
+        expect(HTTPigeon::Logger).not_to have_received(:new)
+        expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::HTTPigeonLogger)
+      end
+
+      it 'does not set a custom :httpigeon_logger if provided and is not a type of httpigeon logger' do
+        allow(HTTPigeon::Logger).to receive(:new)
+
+        request = described_class.new(base_url: 'https://www.example.com', logger: Logger.new($stdout)) do |conn|
+          conn.request :json
+          conn.response :json
+        end
+
+        expect(HTTPigeon::Logger).not_to have_received(:new)
+        expect(request.connection.builder.handlers).not_to include(HTTPigeon::Middleware::HTTPigeonLogger)
       end
     end
 
-    it 'uses the default logger if a custom logger is not provided' do
-      allow(HTTPigeon::Logger).to receive(:new)
+    context 'when a block is not given' do
+      it 'sets the expected default headers' do
+        allow(SecureRandom).to receive(:uuid).and_return('secure-random-uuid')
 
-      described_class.new(base_url: 'https://www.example.com', event_type: 'event.type', log_filters: [:super_secret])
+        test_table = [
+          { # when auto generate request id is turned off
+            auto_generate_request_id: false,
+            request_headers: { 'Foo' => 'barzz' },
+            included_headers: { 'Accept' => 'application/json', 'Foo' => 'barzz' }
+          },
+          { # when auto generate request id is turned on
+            auto_generate_request_id: true,
+            request_headers: { 'Foo' => 'barzz' },
+            included_headers: { 'Accept' => 'application/json', 'X-Request-Id' => 'secure-random-uuid', 'Foo' => 'barzz' }
+          }
+        ]
 
-      expect(HTTPigeon::Logger).to have_received(:new).with(event_type: 'event.type', log_filters: [:super_secret])
-    end
+        test_table.each do |test_case|
+          allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
+          request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers], event_type: 'event.type', log_filters: [:super_secret])
 
-    it 'uses the custom logger if one if provided' do
-      allow(HTTPigeon::Logger).to receive(:new)
+          expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
+        end
+      end
 
-      described_class.new(base_url: 'http://www.example.com', logger: Logger.new($stdout))
+      it 'uses the default logger if a custom logger is not provided' do
+        allow(HTTPigeon::Logger).to receive(:new)
 
-      expect(HTTPigeon::Logger).not_to have_received(:new)
+        request = described_class.new(base_url: 'https://www.example.com', event_type: 'event.type', log_filters: [:super_secret])
+
+        expect(HTTPigeon::Logger).to have_received(:new).with(event_type: 'event.type', log_filters: [:super_secret])
+        expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::HTTPigeonLogger)
+      end
+
+      it 'uses the custom if provided and is a type of httpigeon logger' do
+        allow(HTTPigeon::Logger).to receive(:new)
+
+        request = described_class.new(base_url: 'http://www.example.com', logger: custom_logger_klass.new)
+
+        expect(HTTPigeon::Logger).not_to have_received(:new)
+        expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::HTTPigeonLogger)
+      end
+
+      it 'uses the default logger if a custom logger is provided but is not a type of httpigeon logger' do
+        allow(HTTPigeon::Logger).to receive(:new)
+
+        request = described_class.new(base_url: 'https://www.example.com', logger: Logger.new($stdout))
+
+        expect(HTTPigeon::Logger).to have_received(:new)
+        expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::HTTPigeonLogger)
+      end
     end
   end
 
