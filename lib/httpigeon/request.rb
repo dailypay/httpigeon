@@ -32,12 +32,14 @@ module HTTPigeon
 
     def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil)
       @base_url = base_url
-      @event_type = event_type
-      @log_filters = log_filters || []
-      @logger = logger || default_logger
 
       request_headers = default_headers.merge(headers.to_h)
-      base_connection = Faraday.new(url: base_url)
+
+      base_connection = Faraday.new(url: base_url).tap do |config|
+        config.headers.deep_merge!(request_headers)
+        config.options.merge!(options.to_h)
+        config.response :httpigeon_logger, logger if logger.is_a?(HTTPigeon::Logger)
+      end
 
       @connection = if block_given?
                       yield(base_connection) && base_connection
@@ -47,7 +49,7 @@ module HTTPigeon
                         faraday.options.merge!(options.to_h)
                         faraday.request :url_encoded
                         faraday.adapter adapter || Faraday.default_adapter
-                        faraday.response :httpigeon_logger, @logger
+                        faraday.response :httpigeon_logger, default_logger(event_type, log_filters) unless logger.is_a?(HTTPigeon::Logger)
                       end
                     end
     end
@@ -67,15 +69,24 @@ module HTTPigeon
 
     private
 
-    attr_reader :path, :logger, :event_type, :log_filters
+    attr_reader :logger, :event_type, :log_filters
 
     def parse_response
-      JSON.parse(response_body).with_indifferent_access
-    rescue JSON::ParserError
+      parsed_body = JSON.parse(response_body)
+
+      case parsed_body
+      when Hash
+        parsed_body.with_indifferent_access
+      when Array
+        parsed_body.map(&:with_indifferent_access)
+      else
+        parsed_body
+      end
+    rescue JSON::ParserError, NoMethodError
       response_body.presence
     end
 
-    def default_logger
+    def default_logger(event_type, log_filters)
       HTTPigeon::Logger.new(event_type: event_type, log_filters: log_filters)
     end
 
