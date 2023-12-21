@@ -72,7 +72,7 @@ module HTTPigeon
     attr_reader :logger, :event_type, :log_filters
 
     def parse_response
-      parsed_body = JSON.parse(response_body)
+      parsed_body = response_body.is_a?(String) ? JSON.parse(response_body) : response_body
 
       case parsed_body
       when Hash
