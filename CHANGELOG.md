@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/dailypay/httpigeon/compare/v2.0.0...v2.0.1) (2023-12-21)
+
+
+### Bug Fixes
+
+* **request:** Handle edge cases in response parsing ([#29](https://github.com/dailypay/httpigeon/issues/29)) ([7818562](https://github.com/dailypay/httpigeon/commit/7818562736b5c5258b77357c73f24926e46eb458))
+
 ## [2.0.0](https://github.com/dailypay/httpigeon/compare/v1.3.0...v2.0.0) (2023-10-25)
 
 
