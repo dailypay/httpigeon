@@ -46,7 +46,7 @@ request.run(path: '/users/1')
 # @param event_type [String] for filtering/scoping the logs (default: 'http.outbound')
 # @param log_filters [Array<Symbol, String>] specifies keys in URL, headers and body to be redacted before logging.
 #    Can define keys for both Hash and String payloads (default: [])
-request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, log_filters: [:api_key, 'access_token', '(client_id=)(\w+)'])
+request = HTTPigeon::Request.new(base_url: 'https://dummyjson.com', headers: { Accept: 'application/json' }, log_filters: [:api_key, 'access_token', '/(client_id=)(\w+)/'])
 request.run(path: '/users/1')
 ```
 
@@ -120,9 +120,9 @@ Examples assume you set `:redactor_string` in your initializer to `[REDACTED]`
 | `"email"` OR `:email` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "atu...[REDACTED]" }` | Filters will get applied to nested objects as well. There's no limit on depth |
 | `"email::[REDACTED]"` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "[REDACTED]" }` | Replacement can be whatever you want and is applied as-is |
 | `"/email/"` | Hash | `{ "email": "atuny0@sohu.com" }` | `{ "email": "atuny0@sohu.com" }` | Regex filters will not get applied to hash keys. This is a design decision to prevent bugs |
-| `"/(email=)(.*\\.[a-z]+)(&\|$)/"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atu...[REDACTED]` | Regex filters must be in proper regex format but wrapped in a string. If no replacement is specified, [regex grouping](https://learn.microsoft.com/en-us/dotnet/standard/base-types/grouping-constructs-in-regular-expressions) MUST be used |
-| `"/email=.*\\.[a-z]+(&\|$)/::email=[REDACTED]"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=[REDACTED]` | Replacement can be whatever you want and is applied as-is. No need to use regex grouping when explicitly specifying a replacement |
-| `"(email=)(.*\\.[a-z]+)(&\|$)"` OR `"email"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atuny0@sohu.com` | String filters must be defined in proper regex format, otherwise they will be ignored. This is a design descision to prevent bugs |
+| `"/(email=)(.*\.[a-z]+)(&\|$)/"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atu...[REDACTED]` | Regex filters must be in proper regex format but wrapped in a string. If no replacement is specified, [regex grouping](https://learn.microsoft.com/en-us/dotnet/standard/base-types/grouping-constructs-in-regular-expressions) MUST be used |
+| `"/email=.*\.[a-z]+(&\|$)/::email=[REDACTED]"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=[REDACTED]` | Replacement can be whatever you want and is applied as-is. No need to use regex grouping when explicitly specifying a replacement |
+| `"(email=)(.*\.[a-z]+)(&\|$)"` OR `"email"` | String | `https://dummyjson.com/users?email=atuny0@sohu.com` | `https://dummyjson.com/users?email=atuny0@sohu.com` | String regex filters must be wrapped in forward slashes(i.e `/[you-regex]/`), otherwise they will be ignored. This is a design descision to prevent bugs |
 
 There are some ready-made, tokenized filter patterns available that you can take advantage of for **URLs** and/or **URI encoded requests**:
   - HTTPigeon::FilterPatterns::EMAIL
