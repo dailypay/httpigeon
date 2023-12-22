@@ -221,5 +221,62 @@ describe HTTPigeon::Request do
         expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
+
+    describe 'response parsing' do
+      let(:method) { :get }
+
+      test_cases = [
+        {
+          description: 'when the response is a json object',
+          response_body: '{ "response": "body" }',
+          expected_parsed_response: { response: 'body' }.with_indifferent_access
+        },
+        {
+          description: 'when the response is an array',
+          response_body: '["foo"]',
+          expected_parsed_response: ['foo']
+        },
+        {
+          description: 'when the response is nested array',
+          response_body: '[["foo"], ["bar"]]',
+          expected_parsed_response: [['foo'], ['bar']]
+        },
+        {
+          description: 'when the response is nested json objects',
+          response_body: '{ "response": { "inner": "object" } }',
+          expected_parsed_response: { response: { inner: 'object' }.with_indifferent_access }.with_indifferent_access
+        },
+        {
+          description: 'when the response is json objects inside an array',
+          response_body: '[{ "foo": "bar" }, { "baz": "qux" }]',
+          expected_parsed_response: [{ foo: 'bar' }.with_indifferent_access, { baz: 'qux' }.with_indifferent_access]
+        },
+        {
+          description: 'when the response is arrays inside a json object',
+          response_body: '{ "response": ["foo", "bar"] }',
+          expected_parsed_response: { response: ['foo', 'bar'] }.with_indifferent_access
+        },
+        {
+          description: 'when the response is a truly absurd json object',
+          response_body: '[{"foo":"bar"},1,"foobar",true,null,[{"inner":"object"},1,null,[]]]',
+          expected_parsed_response: [{ foo: "bar" }.with_indifferent_access, 1, "foobar", true, nil, [{ inner: "object" }.with_indifferent_access, 1, nil, []]]
+        },
+        {
+          description: 'when the response is invalid json',
+          response_body: 'invalid json',
+          expected_parsed_response: 'invalid json'
+        }
+      ]
+
+      test_cases.each do |test_case|
+        context test_case[:description] do
+          let(:response_body) { test_case[:response_body] }
+
+          it 'parses the response appropriately' do
+            expect(run_request).to eq(test_case[:expected_parsed_response])
+          end
+        end
+      end
+    end
   end
 end
