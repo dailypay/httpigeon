@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.1.0](https://github.com/dailypay/httpigeon/compare/v2.0.1...v2.1.0) (2024-01-05)
+
+
+### Features
+
+* **response:** [NO-TICKET] parsed_response tests and json support ([#31](https://github.com/dailypay/httpigeon/issues/31)) ([e169215](https://github.com/dailypay/httpigeon/commit/e169215e1394927cb9137e1691196aa535ffd25d))
+
 ## [2.0.1](https://github.com/dailypay/httpigeon/compare/v2.0.0...v2.0.1) (2023-12-21)
 
 
