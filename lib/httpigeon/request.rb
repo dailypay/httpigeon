@@ -73,17 +73,22 @@ module HTTPigeon
 
     def parse_response
       parsed_body = response_body.is_a?(String) ? JSON.parse(response_body) : response_body
-
-      case parsed_body
-      when Hash
-        parsed_body.with_indifferent_access
-      when Array
-        parsed_body.map(&:with_indifferent_access)
-      else
-        parsed_body
-      end
-    rescue JSON::ParserError, NoMethodError
+      deep_with_indifferent_access(parsed_body)
+    rescue JSON::ParserError
       response_body.presence
+    end
+
+    def deep_with_indifferent_access(obj)
+      case obj
+      when Hash
+        obj.transform_values do |value|
+          deep_with_indifferent_access(value)
+        end.with_indifferent_access
+      when Array
+        obj.map { |item| deep_with_indifferent_access(item) }
+      else
+        obj
+      end
     end
 
     def default_logger(event_type, log_filters)
