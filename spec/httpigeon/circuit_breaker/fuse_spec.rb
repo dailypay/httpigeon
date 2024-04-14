@@ -101,8 +101,10 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
         context 'when failure rate is above threshold' do
           before do
-            allow(fuse).to receive(:failure_rate).and_return(fuse.config.failure_rate_threshold + 0.1)
-            allow(fuse).to receive(:failure_count).and_return(fuse.config.min_failures_count + 1)
+            allow(fuse).to receive_messages(
+              failure_count: fuse.config.min_failures_count + 1,
+              failure_rate: fuse.config.failure_rate_threshold + 0.1
+            )
           end
 
           it 'opens the circuit' do
