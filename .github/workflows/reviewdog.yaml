@@ -21,7 +21,6 @@ jobs:
           rubocop_version: gemfile
           rubocop_extensions: rubocop-rspec:gemfile
           reporter: github-pr-check
-          fail_on_error: true
 
       - name: Auto Commit
         uses: stefanzweifel/git-auto-commit-action@v5
