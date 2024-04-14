@@ -25,5 +25,5 @@ jobs:
       - name: Auto Commit
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: Formatted proto files
-          commit_user_name: Proto Formatter Bot
+          commit_message: Rubocop Auto Corrections
+          commit_user_name: Rubocop
