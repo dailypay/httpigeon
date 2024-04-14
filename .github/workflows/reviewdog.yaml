@@ -17,6 +17,7 @@ jobs:
       - name: rubocop
         uses: reviewdog/action-rubocop@v2
         with:
+          rubocop_flags: -a
           rubocop_version: gemfile
           rubocop_extensions: rubocop-rspec:gemfile
           reporter: github-pr-check
