@@ -1,12 +1,16 @@
 name: Reviewdog
 on: [pull_request]
+
 jobs:
   rubocop:
-    name: rubocop
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: 3.1
@@ -17,3 +21,9 @@ jobs:
           rubocop_extensions: rubocop-rspec:gemfile
           reporter: github-pr-check
           fail_on_error: true
+
+      - name: Auto Commit
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Rubocop Auto Corrections
+          commit_user_name: Rubocop
