@@ -24,18 +24,21 @@ module HTTPigeon
       end
     end
 
-    attr_reader :connection, :response, :parsed_response, :base_url
+    attr_reader :connection, :response, :parsed_response, :base_url, :fuse
 
     delegate :status, :body, to: :response, prefix: true
 
-    def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil)
+    def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil, fuse_config: nil)
       @base_url = URI.parse(base_url)
 
       request_headers = default_headers.merge(headers.to_h)
+      fuse_config_opts = { service_id: @base_url.host }.merge(fuse_config.to_h)
+      @fuse = CircuitBreaker::Fuse.from_options(fuse_config_opts)
 
-      base_connection = Faraday.new(url: base_url.to_s).tap do |config|
+      base_connection = Faraday.new(url: @base_url.to_s).tap do |config|
         config.headers.deep_merge!(request_headers)
         config.options.merge!(options.to_h)
+        config.response :circuit_breaker, fuse.config if HTTPigeon.mount_circuit_breaker
         config.response :httpigeon_logger, logger if logger.is_a?(HTTPigeon::Logger)
       end
 
@@ -60,9 +63,7 @@ module HTTPigeon
 
       connection.headers[REQUEST_ID_HEADER] = SecureRandom.uuid if HTTPigeon.auto_generate_request_id
 
-      raw_response = connection.send(method, path, payload) do |request|
-        yield(request) if block_given?
-      end
+      raw_response = HTTPigeon.mount_circuit_breaker ? run_with_fuse(method, path, payload) : simple_run(method, path, payload)
 
       @response = HTTPigeon::Response.new(self, raw_response)
     end
@@ -77,6 +78,20 @@ module HTTPigeon
 
     def default_headers
       { 'Accept' => 'application/json' }
+    end
+
+    def simple_run(method, path, payload)
+      connection.send(method, path, payload) do |request|
+        yield(request) if block_given?
+      end
+    end
+
+    def run_with_fuse(method, path, payload)
+      fuse.execute(request_id: connection.headers[REQUEST_ID_HEADER]) do
+        simple_run(method, path, payload) do |request|
+          yield(request) if block_given?
+        end
+      end
     end
   end
 end

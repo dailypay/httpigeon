@@ -78,7 +78,7 @@ module HTTPigeon
     end
 
     def log_to_stdout(log_data)
-      ::Logger.new($stdout).log(1, log_data.to_json)
+      HTTPigeon.stdout_logger.log(1, log_data.to_json)
     end
   end
 end

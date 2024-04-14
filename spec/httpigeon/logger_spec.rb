@@ -100,7 +100,7 @@ describe HTTPigeon::Logger do
         it 'logs the filtered payload with ruby logger' do
           logger_double = instance_double(Logger)
           allow(logger_double).to receive(:log)
-          allow(Logger).to receive(:new).and_return(logger_double)
+          allow(HTTPigeon).to receive(:stdout_logger).and_return(logger_double)
 
           log
 
@@ -117,7 +117,7 @@ describe HTTPigeon::Logger do
       it 'logs the original payload' do
         logger_double = instance_double(Logger)
         allow(logger_double).to receive(:log)
-        allow(Logger).to receive(:new).and_return(logger_double)
+        allow(HTTPigeon).to receive(:stdout_logger).and_return(logger_double)
 
         log
 
