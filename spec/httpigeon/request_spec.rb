@@ -3,41 +3,35 @@ require 'spec_helper'
 describe HTTPigeon::Request do
   describe '.get' do
     it 'makes request with expected arguments' do
-      request_double = instance_double(described_class, run: { hello: 'hi' }, response: 'faraday-response')
-      endpoint = 'https://dummyjson.com/users/search'
+      endpoint = 'https://dummyjson.com/http/200/read-that'
       query = { q: 'John' }
       event_type = 'some.event'
       headers = { 'Foo' => 'Barzzz' }
 
-      allow(described_class).to receive(:new).and_return(request_double)
-
+      allow(described_class).to receive(:new).and_call_original
       response = described_class.get(endpoint, query, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ hello: 'hi' })
-      expect(response.raw_response).to eq('faraday-response')
+      expect(response.parsed_response).to eq({ "message" => "read-that", "status" => "200" })
+      expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
-      expect(request_double).to have_received(:run).with(method: :get, path: '', payload: query)
     end
   end
 
   describe '.post' do
     it 'makes request with expected arguments' do
-      request_double = instance_double(described_class, run: { hello: 'hi' }, response: 'faraday-response')
-      endpoint = 'https://dummyjson.com/users/add'
+      endpoint = 'https://dummyjson.com/http/202/wrote-this'
       payload = { firstName: 'John', lastName: 'Doe' }
       event_type = 'some.event'
       headers = { 'Foo' => 'Barzzz' }
 
-      allow(described_class).to receive(:new).and_return(request_double)
-
+      allow(described_class).to receive(:new).and_call_original
       response = described_class.post(endpoint, payload, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ hello: 'hi' })
-      expect(response.raw_response).to eq('faraday-response')
+      expect(response.parsed_response).to eq({ "message" => "wrote-this", "status" => "202" })
+      expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
-      expect(request_double).to have_received(:run).with(method: :post, path: '', payload: payload)
     end
   end
 
@@ -53,31 +47,9 @@ describe HTTPigeon::Request do
 
     context 'when a block is given' do
       it 'sets the expected default headers' do
-        allow(SecureRandom).to receive(:uuid).and_return('secure-random-uuid')
+        request = described_class.new(base_url: 'https://www.example.com', headers: { 'Foo' => 'barzz' })
 
-        test_table = [
-          { # when auto generate request id is turned off
-            auto_generate_request_id: false,
-            request_headers: { 'Foo' => 'barzz' },
-            included_headers: { 'Accept' => 'application/json', 'Foo' => 'barzz' }
-          },
-          { # when auto generate request id is turned on
-            auto_generate_request_id: true,
-            request_headers: { 'Foo' => 'barzz' },
-            included_headers: { 'Accept' => 'application/json', 'X-Request-Id' => 'secure-random-uuid', 'Foo' => 'barzz' }
-          }
-        ]
-
-        test_table.each do |test_case|
-          allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
-
-          request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers]) do |conn|
-            conn.request :json
-            conn.response :json
-          end
-
-          expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
-        end
+        expect(request.connection.headers.slice(*%w[Accept Foo])).to eq({ 'Accept' => 'application/json', 'Foo' => 'barzz' })
       end
 
       it 'sets the request options if provided' do
@@ -127,27 +99,9 @@ describe HTTPigeon::Request do
 
     context 'when a block is not given' do
       it 'sets the expected default headers' do
-        allow(SecureRandom).to receive(:uuid).and_return('secure-random-uuid')
+        request = described_class.new(base_url: 'https://www.example.com', headers: { 'Foo' => 'barzz' })
 
-        test_table = [
-          { # when auto generate request id is turned off
-            auto_generate_request_id: false,
-            request_headers: { 'Foo' => 'barzz' },
-            included_headers: { 'Accept' => 'application/json', 'Foo' => 'barzz' }
-          },
-          { # when auto generate request id is turned on
-            auto_generate_request_id: true,
-            request_headers: { 'Foo' => 'barzz' },
-            included_headers: { 'Accept' => 'application/json', 'X-Request-Id' => 'secure-random-uuid', 'Foo' => 'barzz' }
-          }
-        ]
-
-        test_table.each do |test_case|
-          allow(HTTPigeon).to receive(:auto_generate_request_id).and_return(test_case[:auto_generate_request_id])
-          request = described_class.new(base_url: 'https://www.example.com', headers: test_case[:request_headers], event_type: 'event.type', log_filters: [:super_secret])
-
-          expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq(test_case[:included_headers])
-        end
+        expect(request.connection.headers.slice(*%w[Accept Foo])).to eq({ 'Accept' => 'application/json', 'Foo' => 'barzz' })
       end
 
       it 'uses the default logger if a custom logger is not provided' do
@@ -186,6 +140,7 @@ describe HTTPigeon::Request do
     let(:logger_double) { instance_double(HTTPigeon::Logger, log: true) }
 
     before do
+      allow(SecureRandom).to receive(:uuid).and_return('request-uuid')
       allow(HTTPigeon::Logger).to receive(:new).and_return(logger_double)
       allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
 
@@ -196,10 +151,11 @@ describe HTTPigeon::Request do
       let(:method) { :post }
       let(:response_body) { { response: 'body' }.to_json }
 
-      it 'sets the content type header, makes the request, logs and returns parsed response' do
+      it 'sets the request headers, makes the request, logs and returns parsed response' do
         request_env = request.response.env
 
         expect(request_env.request_headers['Content-Type']).to eq('application/json')
+        expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to eq({ email: 'email@example.com' }.to_json)
         expect(logger_double).to have_received(:log).with(any_args)
@@ -211,10 +167,11 @@ describe HTTPigeon::Request do
       let(:method) { :get }
       let(:response_body) { { response: 'body' }.to_json }
 
-      it 'sets the content type header, makes the request, logs and returns parsed response' do
+      it 'sets the request headers, makes the request, logs and returns parsed response' do
         request_env = request.response.env
 
         expect(request_env.request_headers['Content-Type']).to be_nil
+        expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to be_nil
         expect(logger_double).to have_received(:log).with(any_args)

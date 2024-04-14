@@ -5,6 +5,7 @@ require "httpigeon/version"
 require "httpigeon/log_redactor"
 require "httpigeon/logger"
 require "httpigeon/request"
+require "httpigeon/response"
 
 module HTTPigeon
   extend self
