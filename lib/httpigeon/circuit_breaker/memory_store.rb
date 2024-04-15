@@ -64,7 +64,7 @@ module HTTPigeon
       def flush(key)
         bucket = @store[key]
 
-        @store.delete(key) if bucket && bucket.expired?(current_time)
+        @store.delete(key) if !!bucket&.expired?(current_time)
       end
 
       def current_time
