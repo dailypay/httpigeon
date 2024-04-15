@@ -186,4 +186,25 @@ describe HTTPigeon::CircuitBreaker::Fuse do
       expect(fuse.failure_rate).to eq(0.0)
     end
   end
+
+  describe '#reset!' do
+    it 'resets the stats' do
+      fuse.storage.set('run_stat:test.service:failure', 10)
+      fuse.storage.set('run_stat:test.service:success', 10)
+      fuse.storage.set('run_stat:test.service:tripped', 10)
+
+      expect(fuse.failure_count).to eq(10)
+      expect(fuse.success_count).to eq(10)
+      expect(fuse.tripped_count).to eq(10)
+
+      allow(fuse.storage).to receive(:reset!).and_call_original
+
+      fuse.reset!
+
+      expect(fuse.failure_count).to eq(0)
+      expect(fuse.success_count).to eq(0)
+      expect(fuse.tripped_count).to eq(0)
+      expect(fuse.storage).to have_received(:reset!)
+    end
+  end
 end

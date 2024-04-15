@@ -120,4 +120,18 @@ describe HTTPigeon::CircuitBreaker::MemoryStore do
       expect(storage['del-key']).to be_nil
     end
   end
+
+  describe '#reset!' do
+    it 'clears all keys' do
+      storage.tap do |s|
+        s.set('key1', 'value1')
+        s.set('key2', 'value2')
+      end
+
+      expect(storage.storage.keys).to match_array(%w[key1 key2])
+      storage.reset!
+
+      expect(storage.storage).to be_empty
+    end
+  end
 end

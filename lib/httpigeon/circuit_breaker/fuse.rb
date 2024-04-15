@@ -88,6 +88,10 @@ module HTTPigeon
         (total_stats - success_count).to_f / total_stats
       end
 
+      def reset!
+        state_change_syncer.synchronize { storage.reset! }
+      end
+
       private
 
       attr_reader :open_storage_key, :half_open_storage_key, :state_change_syncer, :request_id

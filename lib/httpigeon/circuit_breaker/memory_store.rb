@@ -3,10 +3,10 @@ module HTTPigeon
     class MemoryStore
       MAX_SAMPLE_WINDOW = 180
 
-      attr_reader :sample_window
+      attr_reader :sample_window, :storage
 
       def initialize(sample_window)
-        @store = {}
+        @storage = {}
         @mutex = Mutex.new
         @sample_window = [sample_window.to_i, MAX_SAMPLE_WINDOW].min
       end
@@ -20,7 +20,7 @@ module HTTPigeon
         @mutex.synchronize do
           flush(key)
 
-          @store[key] = DataBucket.new(value, relative_expires_at(opts[:expires_in]))
+          @storage[key] = DataBucket.new(value, relative_expires_at(opts[:expires_in]))
           value
         end
       end
@@ -34,7 +34,7 @@ module HTTPigeon
             existing_bucket.expires_at = relative_expires_at(opts[:expires_in])
             existing_bucket.value += value
           else
-            @store[key] = DataBucket.new(value, relative_expires_at(opts[:expires_in]))
+            @storage[key] = DataBucket.new(value, relative_expires_at(opts[:expires_in]))
             value
           end
         end
@@ -46,25 +46,30 @@ module HTTPigeon
       end
 
       def delete(key)
-        @mutex.synchronize { @store.delete(key) }
+        @mutex.synchronize { @storage.delete(key) }
       end
       alias_method :del, :delete
+
+      def reset!
+        @mutex.synchronize { @storage.clear }
+      end
+      alias_method :clear!, :reset!
 
       private
 
       def fetch_bucket(key)
-        bucket = @store[key]
+        bucket = @storage[key]
 
         return unless bucket
-        @store.delete(key) && return if bucket.expired?(current_time)
+        @storage.delete(key) && return if bucket.expired?(current_time)
 
         bucket
       end
 
       def flush(key)
-        bucket = @store[key]
+        bucket = @storage[key]
 
-        @store.delete(key) if !!bucket&.expired?(current_time)
+        @storage.delete(key) if !!bucket&.expired?(current_time)
       end
 
       def current_time
