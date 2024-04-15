@@ -1,7 +1,5 @@
 module HTTPigeon
   module CircuitBreaker
-    DataBucket = Struct.new(:value, :expires_at)
-
     class MemoryStore
       MAX_SAMPLE_WINDOW = 180
 
@@ -58,19 +56,15 @@ module HTTPigeon
         bucket = @store[key]
 
         return unless bucket
-        @store.delete(key) && return if bucket_expired?(bucket)
+        @store.delete(key) && return if bucket.expired?(current_time)
 
         bucket
-      end
-
-      def bucket_expired?(bucket)
-        bucket.expires_at < current_time
       end
 
       def flush(key)
         bucket = @store[key]
 
-        @store.delete(key) if bucket && bucket_expired?(bucket)
+        @store.delete(key) if bucket && bucket.expired?(current_time)
       end
 
       def current_time
@@ -79,6 +73,23 @@ module HTTPigeon
 
       def relative_expires_at(expires_in)
         current_time + [expires_in.to_i, sample_window].min
+      end
+    end
+
+    class DataBucket
+      attr_accessor :value, :expires_at
+
+      def initialize(value, expires_at)
+        @value = value
+        @expires_at = expires_at
+      end
+
+      def expired?(current_time = Time.now.to_i)
+        expires_at < current_time
+      end
+
+      def to_h
+        { value: value, expires_at: expires_at }
       end
     end
   end

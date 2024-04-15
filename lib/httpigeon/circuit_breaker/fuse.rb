@@ -125,6 +125,10 @@ module HTTPigeon
           return if open?
 
           trip!(type: :full, **opts)
+
+          # reset failures count for current sample window so that the circuit doesn't re-open immediately
+          # if a request fails while in half_open state
+          storage.delete(stat_storage_key(:failure))
         end
 
         opts.delete(:expires_in) # don't log expires_in key as it may be overridden if greater than max

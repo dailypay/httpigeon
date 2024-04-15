@@ -45,11 +45,11 @@ describe HTTPigeon::CircuitBreaker::Fuse do
       context 'when the response has a maintenance mode header' do
         let(:response) { double('response', headers: { 'X-Maintenance-Mode-Timeout' => '30' }) }
 
-        it 'opens the circuit and increments failure count' do
+        it 'opens the circuit and resets failure count' do
           fuse.execute { response }
 
           expect(fuse.storage.get('circuit:test.service:open')).to be true
-          expect(fuse.failure_count).to eq(1)
+          expect(fuse.failure_count).to eq(0)
           expect(fuse.config.on_open_circuit).to have_received(:call).with(
             response,
             instance_of(HTTPigeon::CircuitBreaker::CircuitOpenError)
@@ -61,12 +61,10 @@ describe HTTPigeon::CircuitBreaker::Fuse do
           fuse.execute { double('response', headers: { 'X-Maintenance-Mode-Timeout' => '300' }) }
 
           expect(fuse.storage.get('circuit:test.service:open')).to be true
-          expect(fuse.failure_count).to eq(1)
 
           Timecop.travel(181)
 
           expect(fuse.storage.get('circuit:test.service:open')).to be_nil
-          expect(fuse.failure_count).to eq(0)
         end
       end
 
