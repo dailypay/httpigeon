@@ -35,7 +35,7 @@ module HTTPigeon
       @fuse_max_failures_count = 10
       @fuse_min_failures_count = 5
       @fuse_failure_rate_threshold = 0.5
-      @fuse_sample_window = 300
+      @fuse_sample_window = 60
       @fuse_open_circuit_sleep_window = 30
     end
   end
