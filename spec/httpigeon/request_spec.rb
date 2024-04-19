@@ -131,6 +131,19 @@ describe HTTPigeon::Request do
         expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::HTTPigeonLogger)
       end
     end
+
+    context 'when circuit breaker is enabled' do
+      before do
+        allow(HTTPigeon).to receive(:mount_circuit_breaker).and_return(true)
+        allow(HTTPigeon::CircuitBreaker::Fuse).to receive(:from_options).and_call_original
+      end
+
+      it 'sets the circuit breaker middleware' do
+        request = described_class.new(base_url: 'https://www.example.com', headers: { 'Foo' => 'barzz' })
+
+        expect(request.connection.builder.handlers).to include(HTTPigeon::Middleware::CircuitBreaker)
+      end
+    end
   end
 
   describe '#run' do
@@ -143,39 +156,75 @@ describe HTTPigeon::Request do
       allow(SecureRandom).to receive(:uuid).and_return('request-uuid')
       allow(HTTPigeon::Logger).to receive(:new).and_return(logger_double)
       allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
-
-      run_request
+      allow(request.fuse).to receive(:execute).and_call_original
     end
 
-    context 'when it is not a read request' do
+    context 'when circuit breaker is disabled' do
       let(:method) { :post }
       let(:response_body) { { response: 'body' }.to_json }
 
-      it 'sets the request headers, makes the request, logs and returns parsed response' do
-        request_env = request.response.env
+      before { run_request }
 
-        expect(request_env.request_headers['Content-Type']).to eq('application/json')
-        expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
-        expect(request_env.method).to eq(method)
-        expect(request_env.request_body).to eq({ email: 'email@example.com' }.to_json)
-        expect(logger_double).to have_received(:log).with(any_args)
-        expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
+      context 'when it is not a read request' do
+        it 'runs the request without a fuse' do
+          expect(request.fuse).not_to have_received(:execute)
+        end
+
+        it 'sets the request headers, makes the request, logs and returns parsed response' do
+          request_env = request.response.env
+
+          expect(request_env.request_headers['Content-Type']).to eq('application/json')
+          expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
+          expect(request_env.method).to eq(method)
+          expect(request_env.request_body).to eq({ email: 'email@example.com' }.to_json)
+          expect(logger_double).to have_received(:log).with(any_args)
+          expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
+        end
+      end
+
+      context 'when it is a read request' do
+        let(:method) { :get }
+        let(:response_body) { { response: 'body' }.to_json }
+
+        it 'runs the request without a fuse' do
+          expect(request.fuse).not_to have_received(:execute)
+        end
+
+        it 'sets the request headers, makes the request, logs and returns parsed response' do
+          request_env = request.response.env
+
+          expect(request.fuse).not_to have_received(:execute)
+          expect(request_env.request_headers['Content-Type']).to be_nil
+          expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
+          expect(request_env.method).to eq(method)
+          expect(request_env.request_body).to be_nil
+          expect(logger_double).to have_received(:log).with(any_args)
+          expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
+        end
       end
     end
 
-    context 'when it is a read request' do
-      let(:method) { :get }
+    context 'when circuit breaker is enabled' do
       let(:response_body) { { response: 'body' }.to_json }
+      let(:method) { :get }
 
-      it 'sets the request headers, makes the request, logs and returns parsed response' do
+      before do
+        allow(HTTPigeon).to receive(:mount_circuit_breaker).and_return(true)
+
+        run_request
+      end
+
+      it 'runs the request with a fuse' do
         request_env = request.response.env
 
+        expect(request.fuse).to have_received(:execute)
+        expect(request.fuse.success_count).to eq(1)
         expect(request_env.request_headers['Content-Type']).to be_nil
         expect(request_env.request_headers['X-Request-Id']).to eq('request-uuid')
         expect(request_env.method).to eq(method)
         expect(request_env.request_body).to be_nil
         expect(logger_double).to have_received(:log).with(any_args)
-        expect(run_request).to eq(JSON.parse(response_body).with_indifferent_access)
+        expect(request.response.parsed_response).to eq(JSON.parse(response_body).with_indifferent_access)
       end
     end
 

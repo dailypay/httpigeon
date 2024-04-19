@@ -36,6 +36,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rubocop", "~> 1.21"
   spec.add_development_dependency "rubocop-rspec", "~> 2.24"
   spec.add_development_dependency "pry", "~> 0.13.1"
+  spec.add_development_dependency "timecop", "~> 0.9.8"
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

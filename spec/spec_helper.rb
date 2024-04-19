@@ -8,7 +8,9 @@ SimpleCov.start do
 end
 
 require 'httpigeon'
+
 require 'pry'
+require 'timecop'
 
 # See https://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 # for more details on configuration
