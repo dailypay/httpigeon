@@ -40,10 +40,10 @@ module HTTPigeon
         @on_circuit_closed = HTTPigeon.fuse_on_circuit_closed
         @on_circuit_opened = HTTPigeon.fuse_on_circuit_opened
         @open_circuit_handler = if HTTPigeon.fuse_open_circuit_handler.respond_to?(:call)
-                             HTTPigeon.fuse_open_circuit_handler
-                           else
-                             ->(api_response, exception) { null_response(api_response, exception) }
-                           end
+                                  HTTPigeon.fuse_open_circuit_handler
+                                else
+                                  ->(api_response, exception) { null_response(api_response, exception) }
+                                end
       end
 
       def to_h

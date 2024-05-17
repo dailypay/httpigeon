@@ -33,8 +33,8 @@ module HTTPigeon
       @log_circuit_events = true
 
       @fuse_error_codes_watchlist = []
-      @fuse_on_circuit_opened = ->(*_args){}
-      @fuse_on_circuit_closed = ->(*_args){}
+      @fuse_on_circuit_opened = ->(*_args) {}
+      @fuse_on_circuit_closed = ->(*_args) {}
       @fuse_open_circuit_handler = nil
       @fuse_max_failures_count = 10
       @fuse_min_failures_count = 5
