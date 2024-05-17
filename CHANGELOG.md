@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0](https://github.com/dailypay/httpigeon/compare/v2.1.0...v2.2.0) (2024-05-17)
+
+
+### Features
+
+* Add more callbacks ([#38](https://github.com/dailypay/httpigeon/issues/38)) ([660cfba](https://github.com/dailypay/httpigeon/commit/660cfba63a8cdc2ff73764913426d38644aaf53a))
+* **request:** Implement circuit breaking ([#33](https://github.com/dailypay/httpigeon/issues/33)) ([c25eab4](https://github.com/dailypay/httpigeon/commit/c25eab406d26b50da806d122eb73be0701b84c4e))
+
 ## [2.1.0](https://github.com/dailypay/httpigeon/compare/v2.0.1...v2.1.0) (2024-01-05)
 
 
