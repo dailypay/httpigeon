@@ -3,7 +3,7 @@ module HTTPigeon
     class MemoryStore
       MAX_SAMPLE_WINDOW = 180
 
-      attr_reader :sample_window, :storage
+      attr_reader :sample_window
 
       def initialize(sample_window)
         @storage = {}
@@ -54,6 +54,10 @@ module HTTPigeon
         @mutex.synchronize { @storage.clear }
       end
       alias_method :clear!, :reset!
+
+      def storage
+        @mutex.synchronize { @storage.dup }
+      end
 
       private
 

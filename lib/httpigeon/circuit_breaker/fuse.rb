@@ -14,12 +14,12 @@ module HTTPigeon
         new(FuseConfig.new(options))
       end
 
-      attr_reader :service_id, :config, :storage
+      attr_reader :service_id, :config, :store
 
       def initialize(config)
         @config = config
         @service_id = config.service_id.to_s
-        @storage = CircuitBreaker::MemoryStore.new(config.sample_window)
+        @store = CircuitBreaker::MemoryStore.new(config.sample_window)
         @open_storage_key = "circuit:#{service_id}:#{STATE_OPEN}"
         @half_open_storage_key = "circuit:#{service_id}:#{STATE_HALF_OPEN}"
         @state_change_syncer = Mutex.new
@@ -31,7 +31,7 @@ module HTTPigeon
         if open?
           record_tripped!
 
-          config.on_open_circuit.call(config.null_response, config.circuit_open_error)
+          config.open_circuit_handler.call(config.null_response, config.circuit_open_error)
         else
           begin
             response = yield
@@ -47,7 +47,7 @@ module HTTPigeon
                 }
               )
 
-              return config.on_open_circuit.call(response, config.circuit_open_error)
+              return config.open_circuit_handler.call(response, config.circuit_open_error)
             end
 
             record_success!
@@ -61,23 +61,23 @@ module HTTPigeon
       end
 
       def open?
-        storage.key?(open_storage_key)
+        store.key?(open_storage_key)
       end
 
       def half_open?
-        storage.key?(half_open_storage_key)
+        store.key?(half_open_storage_key)
       end
 
       def failure_count
-        storage.get(stat_storage_key(:failure)).to_i
+        store.get(stat_storage_key(:failure)).to_i
       end
 
       def success_count
-        storage.get(stat_storage_key(:success)).to_i
+        store.get(stat_storage_key(:success)).to_i
       end
 
       def tripped_count
-        storage.get(stat_storage_key(:tripped)).to_i
+        store.get(stat_storage_key(:tripped)).to_i
       end
 
       def failure_rate
@@ -89,7 +89,7 @@ module HTTPigeon
       end
 
       def reset!
-        state_change_syncer.synchronize { storage.reset! }
+        state_change_syncer.synchronize { store.reset! }
       end
 
       private
@@ -114,14 +114,15 @@ module HTTPigeon
           # For the circuit to be closable, it must NOT be open AND
           # it must be currently half open (i.e half_open_storage_key must be true)
           # Otherwise, we return early
-          return unless !open? && storage.delete(half_open_storage_key)
+          return unless !open? && store.delete(half_open_storage_key)
 
           # reset failures count for current sample window
           # so that we can only trip the circuit if we reach the min failures threshold again
-          storage.delete(stat_storage_key(:failure))
+          store.delete(stat_storage_key(:failure))
         end
 
         log_circuit_event('circuit_closed', STATE_CLOSED, opts)
+        config.on_circuit_closed.call(store.storage, config.to_h)
       end
 
       def open!(opts = {})
@@ -132,11 +133,12 @@ module HTTPigeon
 
           # reset failures count for current sample window so that the circuit doesn't re-open immediately
           # if a request fails while in half_open state
-          storage.delete(stat_storage_key(:failure))
+          store.delete(stat_storage_key(:failure))
         end
 
         opts.delete(:expires_in) # don't log expires_in key as it may be overridden if greater than max
         log_circuit_event('circuit_opened', STATE_OPEN, opts)
+        config.on_circuit_opened.call(store.storage, config.to_h)
       end
 
       def half_open!(opts = {})
@@ -151,10 +153,10 @@ module HTTPigeon
 
       def trip!(type:, **opts)
         if type == :full
-          storage.set(open_storage_key, true, { expires_in: config.open_circuit_sleep_window }.merge(opts))
-          storage.set(half_open_storage_key, true, { expires_in: config.sample_window }.merge(opts))
+          store.set(open_storage_key, true, { expires_in: config.open_circuit_sleep_window }.merge(opts))
+          store.set(half_open_storage_key, true, { expires_in: config.sample_window }.merge(opts))
         elsif type == :partial
-          storage.set(half_open_storage_key, true, { expires_in: config.sample_window }.merge(opts))
+          store.set(half_open_storage_key, true, { expires_in: config.sample_window }.merge(opts))
         end
       end
 
@@ -177,7 +179,7 @@ module HTTPigeon
       end
 
       def record_stat(outcome, value = 1)
-        storage.increment(stat_storage_key(outcome), value, expires_in: config.sample_window)
+        store.increment(stat_storage_key(outcome), value, expires_in: config.sample_window)
       end
 
       def stat_storage_key(outcome)
