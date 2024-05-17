@@ -15,7 +15,9 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#execute' do
     before do
-      allow(fuse.config.on_open_circuit).to receive(:call).and_return(nil)
+      allow(fuse.config.open_circuit_handler).to receive(:call).and_return(nil)
+      allow(fuse.config.on_circuit_closed).to receive(:call).and_return(nil)
+      allow(fuse.config.on_circuit_opened).to receive(:call).and_return(nil)
     end
 
     context 'when the circuit is open' do
@@ -27,10 +29,11 @@ describe HTTPigeon::CircuitBreaker::Fuse do
         expect(fuse.tripped_count).to eq(1)
       end
 
-      it 'calls on_open_circuit' do
+      it 'calls open_circuit_handler' do
         fuse.execute { 'response' }
 
-        expect(fuse.config.on_open_circuit).to have_received(:call).with(
+        expect(fuse.config.on_circuit_opened).not_to have_received(:call)
+        expect(fuse.config.open_circuit_handler).to have_received(:call).with(
           instance_of(HTTPigeon::CircuitBreaker::NullResponse),
           instance_of(HTTPigeon::CircuitBreaker::CircuitOpenError)
         )
@@ -48,9 +51,13 @@ describe HTTPigeon::CircuitBreaker::Fuse do
         it 'opens the circuit and resets failure count' do
           fuse.execute { response }
 
-          expect(fuse.storage.get('circuit:test.service:open')).to be true
+          expect(fuse.store.get('circuit:test.service:open')).to be true
           expect(fuse.failure_count).to eq(0)
-          expect(fuse.config.on_open_circuit).to have_received(:call).with(
+          expect(fuse.config.on_circuit_opened).to have_received(:call).with(
+            fuse.store.storage,
+            fuse.config.to_h
+          )
+          expect(fuse.config.open_circuit_handler).to have_received(:call).with(
             response,
             instance_of(HTTPigeon::CircuitBreaker::CircuitOpenError)
           )
@@ -60,11 +67,11 @@ describe HTTPigeon::CircuitBreaker::Fuse do
           Timecop.freeze
           fuse.execute { double('response', headers: { 'X-Maintenance-Mode-Timeout' => '300' }) }
 
-          expect(fuse.storage.get('circuit:test.service:open')).to be true
+          expect(fuse.store.get('circuit:test.service:open')).to be true
 
           Timecop.travel(181)
 
-          expect(fuse.storage.get('circuit:test.service:open')).to be_nil
+          expect(fuse.store.get('circuit:test.service:open')).to be_nil
         end
       end
 
@@ -76,6 +83,19 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
           expect(fuse.success_count).to eq(1)
           expect(return_value).to eq(response)
+        end
+
+        it 'closes the circuit if half_open' do
+          fuse.store.set('circuit:test.service:half_open', true)
+
+          fuse.execute { response }
+
+          expect(fuse.store.get('circuit:test.service:open')).to be_nil
+          expect(fuse.store.get('circuit:test.service:half_open')).to be_nil
+          expect(fuse.config.on_circuit_closed).to have_received(:call).with(
+            fuse.store.storage,
+            fuse.config.to_h
+          )
         end
       end
 
@@ -107,8 +127,8 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
           it 'opens the circuit' do
             expect { fuse.execute { raise Faraday::ServerError.new({ status: 501 }) } }.to raise_error(Faraday::ServerError)
-            expect(fuse.storage.get('circuit:test.service:open')).to be true
-            expect(fuse.storage.get('circuit:test.service:half_open')).to be true
+            expect(fuse.store.get('circuit:test.service:open')).to be true
+            expect(fuse.store.get('circuit:test.service:half_open')).to be true
           end
         end
 
@@ -117,8 +137,8 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
           it 'opens the circuit' do
             expect { fuse.execute { raise Faraday::ServerError.new({ status: 501 }) } }.to raise_error(Faraday::ServerError)
-            expect(fuse.storage.get('circuit:test.service:open')).to be true
-            expect(fuse.storage.get('circuit:test.service:half_open')).to be true
+            expect(fuse.store.get('circuit:test.service:open')).to be true
+            expect(fuse.store.get('circuit:test.service:half_open')).to be true
           end
         end
       end
@@ -127,7 +147,7 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#open?' do
     it 'returns true when the circuit is open' do
-      fuse.storage.set('circuit:test.service:open', true)
+      fuse.store.set('circuit:test.service:open', true)
 
       expect(fuse.open?).to be true
     end
@@ -139,7 +159,7 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#half_open?' do
     it 'returns true when the circuit is half open' do
-      fuse.storage.set('circuit:test.service:half_open', true)
+      fuse.store.set('circuit:test.service:half_open', true)
 
       expect(fuse.half_open?).to be true
     end
@@ -151,7 +171,7 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#failure_count' do
     it 'returns the failure count' do
-      fuse.storage.set('run_stat:test.service:failure', 10)
+      fuse.store.set('run_stat:test.service:failure', 10)
 
       expect(fuse.failure_count).to eq(10)
     end
@@ -159,7 +179,7 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#success_count' do
     it 'returns the success count' do
-      fuse.storage.set('run_stat:test.service:success', 10)
+      fuse.store.set('run_stat:test.service:success', 10)
 
       expect(fuse.success_count).to eq(10)
     end
@@ -167,7 +187,7 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#tripped_count' do
     it 'returns the tripped count' do
-      fuse.storage.set('run_stat:test.service:tripped', 10)
+      fuse.store.set('run_stat:test.service:tripped', 10)
 
       expect(fuse.tripped_count).to eq(10)
     end
@@ -175,9 +195,9 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#failure_rate' do
     it 'returns the failure rate' do
-      fuse.storage.set('run_stat:test.service:failure', 10)
-      fuse.storage.set('run_stat:test.service:success', 10)
-      fuse.storage.set('run_stat:test.service:tripped', 10)
+      fuse.store.set('run_stat:test.service:failure', 10)
+      fuse.store.set('run_stat:test.service:success', 10)
+      fuse.store.set('run_stat:test.service:tripped', 10)
 
       expect(fuse.failure_rate.round(3)).to eq(0.667)
     end
@@ -189,22 +209,22 @@ describe HTTPigeon::CircuitBreaker::Fuse do
 
   describe '#reset!' do
     it 'resets the stats' do
-      fuse.storage.set('run_stat:test.service:failure', 10)
-      fuse.storage.set('run_stat:test.service:success', 10)
-      fuse.storage.set('run_stat:test.service:tripped', 10)
+      fuse.store.set('run_stat:test.service:failure', 10)
+      fuse.store.set('run_stat:test.service:success', 10)
+      fuse.store.set('run_stat:test.service:tripped', 10)
 
       expect(fuse.failure_count).to eq(10)
       expect(fuse.success_count).to eq(10)
       expect(fuse.tripped_count).to eq(10)
 
-      allow(fuse.storage).to receive(:reset!).and_call_original
+      allow(fuse.store).to receive(:reset!).and_call_original
 
       fuse.reset!
 
       expect(fuse.failure_count).to eq(0)
       expect(fuse.success_count).to eq(0)
       expect(fuse.tripped_count).to eq(0)
-      expect(fuse.storage).to have_received(:reset!)
+      expect(fuse.store).to have_received(:reset!)
     end
   end
 end
