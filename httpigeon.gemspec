@@ -33,8 +33,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.0"
   spec.add_development_dependency "rspec", "~> 3.4"
   spec.add_development_dependency "simplecov"
-  spec.add_development_dependency "rubocop", "~> 1.21"
-  spec.add_development_dependency "rubocop-rspec", "~> 2.24"
+  spec.add_development_dependency "rubocop", "~> 1.65"
+  spec.add_development_dependency "rubocop-rspec", "~> 3.0"
   spec.add_development_dependency "pry", "~> 0.13.1"
   spec.add_development_dependency "timecop", "~> 0.9.8"
 
