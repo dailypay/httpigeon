@@ -24,7 +24,7 @@ module HTTPigeon
       end
 
       def put(endpoint, payload, headers = {}, event_type = nil, log_filters = [])
-        request = new(base_url: endpoint, headers: headers,  event_type: event_type, log_filters: log_filters)
+        request = new(base_url: endpoint, headers: headers, event_type: event_type, log_filters: log_filters)
         request.run(method: :put, path: '', payload: payload) do |req|
           yield(req) if block_given?
         end
