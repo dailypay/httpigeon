@@ -1,5 +1,18 @@
 # Changelog
 
+## [2.3.0](https://github.com/dailypay/httpigeon/compare/v2.2.0...v2.3.0) (2024-07-11)
+
+
+### Features
+
+* add and fix put and delete methods ([#41](https://github.com/dailypay/httpigeon/issues/41)) ([1d9e9b0](https://github.com/dailypay/httpigeon/commit/1d9e9b0585d56c9785efa97e5a743cdcbd179884))
+* Use enumarable for collection delegation ([8fc143a](https://github.com/dailypay/httpigeon/commit/8fc143a8717aebdd072bd48dceccc34a318657b7))
+
+
+### Bug Fixes
+
+* Delegate :map to parsed response ([#39](https://github.com/dailypay/httpigeon/issues/39)) ([59b77e8](https://github.com/dailypay/httpigeon/commit/59b77e821a1356884cb7c426fe433229aa1bdfcc))
+
 ## [2.2.0](https://github.com/dailypay/httpigeon/compare/v2.1.0...v2.2.0) (2024-05-17)
 
 
