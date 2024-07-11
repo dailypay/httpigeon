@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.1](https://github.com/dailypay/httpigeon/compare/v2.3.0...v2.3.1) (2024-07-11)
+
+
+### Bug Fixes
+
+* Execute block within scope ([#42](https://github.com/dailypay/httpigeon/issues/42)) ([a9a43c3](https://github.com/dailypay/httpigeon/commit/a9a43c391b449b3316812e1c99fb88e25c923b31))
+
 ## [2.3.0](https://github.com/dailypay/httpigeon/compare/v2.2.0...v2.3.0) (2024-07-11)
 
 
