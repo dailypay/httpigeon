@@ -178,7 +178,7 @@ RSpec/MultipleMemoizedHelpers:
 RSpec/NestedGroups:
   Max: 5
 
-RSpec/FilePath:
+RSpec/SpecFilePathSuffix:
   Exclude:
     - spec/httpigeon/**/*.rb
 
