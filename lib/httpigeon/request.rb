@@ -24,9 +24,9 @@ module HTTPigeon
       end
     end
 
-    attr_reader :connection, :response, :parsed_response, :base_url, :fuse
+    attr_reader :connection, :response, :base_url, :fuse
 
-    delegate :status, :body, to: :response, prefix: true
+    delegate :status, :body, :parsed_response, to: :response, prefix: true
 
     def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil, fuse_config: nil)
       @base_url = URI.parse(base_url)
@@ -63,7 +63,17 @@ module HTTPigeon
 
       connection.headers[REQUEST_ID_HEADER] = SecureRandom.uuid if HTTPigeon.auto_generate_request_id
 
-      raw_response = HTTPigeon.mount_circuit_breaker ? run_with_fuse(method, path, payload) : simple_run(method, path, payload)
+      raw_response = if HTTPigeon.mount_circuit_breaker
+                       fuse.execute(request_id: connection.headers[REQUEST_ID_HEADER]) do
+                         connection.send(method, path, payload) do |request|
+                           yield(request) if block_given?
+                         end
+                       end
+                     else
+                       connection.send(method, path, payload) do |request|
+                         yield(request) if block_given?
+                       end
+                     end
 
       @response = HTTPigeon::Response.new(self, raw_response)
     end
@@ -78,20 +88,6 @@ module HTTPigeon
 
     def default_headers
       { 'Accept' => 'application/json' }
-    end
-
-    def simple_run(method, path, payload)
-      connection.send(method, path, payload) do |request|
-        yield(request) if block_given?
-      end
-    end
-
-    def run_with_fuse(method, path, payload)
-      fuse.execute(request_id: connection.headers[REQUEST_ID_HEADER]) do
-        simple_run(method, path, payload) do |request|
-          yield(request) if block_given?
-        end
-      end
     end
   end
 end
