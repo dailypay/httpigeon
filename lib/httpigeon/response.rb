@@ -2,7 +2,7 @@ module HTTPigeon
   class Response
     attr_reader :request, :parsed_response, :raw_response
 
-    delegate :to_h, :to_json, :with_indifferent_access, to: :parsed_response
+    delegate :map, :to_a, :to_h, :to_json, :with_indifferent_access, to: :parsed_response
     delegate :status, :body, :env, to: :raw_response
 
     def initialize(request, raw_response)
