@@ -22,6 +22,20 @@ module HTTPigeon
           yield(req) if block_given?
         end
       end
+
+      def put(endpoint, payload, headers = {}, event_type = nil, log_filters = [])
+        request = new(base_url: endpoint, headers: headers, event_type: event_type, log_filters: log_filters)
+        request.run(method: :put, path: '', payload: payload) do |req|
+          yield(req) if block_given?
+        end
+      end
+
+      def delete(endpoint, query = {}, headers = {}, event_type = nil, log_filters = [])
+        request = new(base_url: endpoint, headers: headers, event_type: event_type, log_filters: log_filters)
+        request.run(method: :delete, path: '', payload: query) do |req|
+          yield(req) if block_given?
+        end
+      end
     end
 
     attr_reader :connection, :response, :parsed_response, :base_url, :fuse
@@ -56,7 +70,7 @@ module HTTPigeon
     end
 
     def run(method: :get, path: '/', payload: {})
-      unless method.to_sym == :get
+      unless method.to_sym == :get || method.to_sym == :delete
         payload = payload.presence&.to_json
         connection.headers['Content-Type'] = 'application/json'
       end

@@ -35,6 +35,40 @@ describe HTTPigeon::Request do
     end
   end
 
+  describe '.put' do
+    it 'makes request with expected arguments' do
+      endpoint = 'https://dummyjson.com/http/202/changed-this'
+      payload = { firstName: 'John', lastName: 'Doe' }
+      event_type = 'some.event'
+      headers = { 'Foo' => 'Barzzz' }
+
+      allow(described_class).to receive(:new).and_call_original
+      response = described_class.put(endpoint, payload, headers, event_type)
+
+      expect(response).to be_a(HTTPigeon::Response)
+      expect(response.parsed_response).to eq({ "message" => "changed-this", "status" => "202" })
+      expect(response.raw_response).to be_a(Faraday::Response)
+      expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
+    end
+  end
+
+  describe '.delete' do
+    it 'makes request with expected arguments' do
+      endpoint = 'https://dummyjson.com/http/200/deleted-that'
+      query = { q: 'John' }
+      event_type = 'some.event'
+      headers = { 'Foo' => 'Barzzz' }
+
+      allow(described_class).to receive(:new).and_call_original
+      response = described_class.delete(endpoint, query, headers, event_type)
+
+      expect(response).to be_a(HTTPigeon::Response)
+      expect(response.parsed_response).to eq({ "message" => "deleted-that", "status" => "200" })
+      expect(response.raw_response).to be_a(Faraday::Response)
+      expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
+    end
+  end
+
   describe '#new' do
     let(:custom_logger_klass) { double('some-custom-logger-klass') }
 
