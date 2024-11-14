@@ -5,7 +5,7 @@ module HTTPigeon
     attr_reader :request, :parsed_response, :raw_response
 
     delegate :each, :to_h, :to_json, :with_indifferent_access, to: :parsed_response
-    delegate :status, :body, :env, to: :raw_response
+    delegate :status, :body, :env, :headers, to: :raw_response
 
     def initialize(request, raw_response)
       @request = request
@@ -25,7 +25,8 @@ module HTTPigeon
     private
 
     def parse_response
-      parsed_body = body.is_a?(String) ? JSON.parse(body) : body
+      parsable_content_type = headers['content-type'].blank? || headers['content-type'].include?('application/json')
+      parsed_body = body.is_a?(String) && parsable_content_type ? JSON.parse(body) : body
       @parsed_response = deep_with_indifferent_access(parsed_body)
     rescue JSON::ParserError
       @parsed_response = body.presence || {}

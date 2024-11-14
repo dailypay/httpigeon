@@ -12,7 +12,7 @@ describe HTTPigeon::Request do
       response = described_class.get(endpoint, query, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ "message" => "read-that", "status" => "200" })
+      expect(response.parsed_response).to eq({ "message" => "read-that", "status" => 200 })
       expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
     end
@@ -189,13 +189,14 @@ describe HTTPigeon::Request do
     before do
       allow(SecureRandom).to receive(:uuid).and_return('request-uuid')
       allow(HTTPigeon::Logger).to receive(:new).and_return(logger_double)
-      allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
+      allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body, headers: response_headers)
       allow(request.fuse).to receive(:execute).and_call_original
     end
 
     context 'when circuit breaker is disabled' do
       let(:method) { :post }
       let(:response_body) { { response: 'body' }.to_json }
+      let(:response_headers) { { 'content-type' => 'application/json' } }
 
       before { run_request }
 
@@ -269,50 +270,66 @@ describe HTTPigeon::Request do
         {
           description: 'when the response is a json object',
           response_body: '{ "response": "body" }',
-          expected_parsed_response: { response: 'body' }.with_indifferent_access
+          expected_parsed_response: { response: 'body' }.with_indifferent_access,
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is an array',
           response_body: '["foo"]',
-          expected_parsed_response: ['foo']
+          expected_parsed_response: ['foo'],
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is nested array',
           response_body: '[["foo"], ["bar"]]',
-          expected_parsed_response: [['foo'], ['bar']]
+          expected_parsed_response: [['foo'], ['bar']],
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is nested json objects',
           response_body: '{ "response": { "inner": "object" } }',
-          expected_parsed_response: { response: { inner: 'object' }.with_indifferent_access }.with_indifferent_access
+          expected_parsed_response: { response: { inner: 'object' }.with_indifferent_access }.with_indifferent_access,
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is json objects inside an array',
           response_body: '[{ "foo": "bar" }, { "baz": "qux" }]',
-          expected_parsed_response: [{ foo: 'bar' }.with_indifferent_access, { baz: 'qux' }.with_indifferent_access]
+          expected_parsed_response: [{ foo: 'bar' }.with_indifferent_access, { baz: 'qux' }.with_indifferent_access],
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is arrays inside a json object',
           response_body: '{ "response": ["foo", "bar"] }',
-          expected_parsed_response: { response: ['foo', 'bar'] }.with_indifferent_access
+          expected_parsed_response: { response: ['foo', 'bar'] }.with_indifferent_access,
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is a truly absurd json object',
           response_body: '[{"foo":"bar"},1,"foobar",true,null,[{"inner":"object"},1,null,[]]]',
-          expected_parsed_response: [{ foo: "bar" }.with_indifferent_access, 1, "foobar", true, nil, [{ inner: "object" }.with_indifferent_access, 1, nil, []]]
+          expected_parsed_response: [{ foo: "bar" }.with_indifferent_access, 1, "foobar", true, nil, [{ inner: "object" }.with_indifferent_access, 1, nil, []]],
+          headers: { 'content-type' => 'application/json' }
         },
         {
           description: 'when the response is invalid json',
           response_body: 'invalid json',
-          expected_parsed_response: 'invalid json'
+          expected_parsed_response: 'invalid json',
+          headers: { 'content-type' => 'application/json' }
+        },
+        {
+          description: 'when the response is a pdf',
+          response_body: "%PDF-1.4\n%mock PDF content\n%%EOF",
+          expected_parsed_response: "%PDF-1.4\n%mock PDF content\n%%EOF",
+          headers: { 'content-type' => 'application/pdf' }
         }
       ]
 
       test_cases.each do |test_case|
         context test_case[:description] do
           let(:response_body) { test_case[:response_body] }
+          let(:response_headers) { test_case[:headers] }
 
           it 'parses the response appropriately' do
+            require 'byebug'; byebug
             expect(run_request).to eq(test_case[:expected_parsed_response])
           end
         end
