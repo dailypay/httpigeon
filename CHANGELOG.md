@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/dailypay/httpigeon/compare/v2.3.1...v2.3.2) (2024-11-14)
+
+
+### Bug Fixes
+
+* **UNTICKETED:** Dont parse pdf as json ([#44](https://github.com/dailypay/httpigeon/issues/44)) ([fd4c13c](https://github.com/dailypay/httpigeon/commit/fd4c13cbb6c8084aa054c2daa756ace651e1338b))
+
 ## [2.3.1](https://github.com/dailypay/httpigeon/compare/v2.3.0...v2.3.1) (2024-07-11)
 
 
