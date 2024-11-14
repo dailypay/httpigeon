@@ -326,7 +326,7 @@ describe HTTPigeon::Request do
         {
           description: 'when no headers are set, json is assumed',
           response_body: '{ "response": "body" }',
-          expected_parsed_response: { response: 'body' }.with_indifferent_access,
+          expected_parsed_response: { response: 'body' }.with_indifferent_access
         }
       ]
 
