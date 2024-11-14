@@ -29,7 +29,7 @@ describe HTTPigeon::Request do
       response = described_class.post(endpoint, payload, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ "message" => "wrote-this", "status" => "202" })
+      expect(response.parsed_response).to eq({ "message" => "wrote-this", "status" => 202 })
       expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
     end
@@ -46,7 +46,7 @@ describe HTTPigeon::Request do
       response = described_class.put(endpoint, payload, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ "message" => "changed-this", "status" => "202" })
+      expect(response.parsed_response).to eq({ "message" => "changed-this", "status" => 202 })
       expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
     end
@@ -63,7 +63,7 @@ describe HTTPigeon::Request do
       response = described_class.delete(endpoint, query, headers, event_type)
 
       expect(response).to be_a(HTTPigeon::Response)
-      expect(response.parsed_response).to eq({ "message" => "deleted-that", "status" => "200" })
+      expect(response.parsed_response).to eq({ "message" => "deleted-that", "status" => 200 })
       expect(response.raw_response).to be_a(Faraday::Response)
       expect(described_class).to have_received(:new).with(base_url: endpoint, headers: headers, event_type: event_type, log_filters: [])
     end
@@ -189,7 +189,8 @@ describe HTTPigeon::Request do
     before do
       allow(SecureRandom).to receive(:uuid).and_return('request-uuid')
       allow(HTTPigeon::Logger).to receive(:new).and_return(logger_double)
-      allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body, headers: response_headers)
+      allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
+      allow_any_instance_of(Faraday::Response).to receive(:headers).and_return(response_headers)
       allow(request.fuse).to receive(:execute).and_call_original
     end
 
@@ -242,6 +243,7 @@ describe HTTPigeon::Request do
     context 'when circuit breaker is enabled' do
       let(:response_body) { { response: 'body' }.to_json }
       let(:method) { :get }
+      let(:response_headers) { { 'content-type' => 'application/json' } }
 
       before do
         allow(HTTPigeon).to receive(:mount_circuit_breaker).and_return(true)
@@ -317,8 +319,8 @@ describe HTTPigeon::Request do
         },
         {
           description: 'when the response is a pdf',
-          response_body: "%PDF-1.4\n%mock PDF content\n%%EOF",
-          expected_parsed_response: "%PDF-1.4\n%mock PDF content\n%%EOF",
+          response_body: File.binread('spec/test-image.pdf'),
+          expected_parsed_response: File.binread('spec/test-image.pdf'),
           headers: { 'content-type' => 'application/pdf' }
         }
       ]
@@ -329,7 +331,6 @@ describe HTTPigeon::Request do
           let(:response_headers) { test_case[:headers] }
 
           it 'parses the response appropriately' do
-            require 'byebug'; byebug
             expect(run_request).to eq(test_case[:expected_parsed_response])
           end
         end
