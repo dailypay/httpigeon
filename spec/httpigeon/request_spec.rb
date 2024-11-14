@@ -322,6 +322,11 @@ describe HTTPigeon::Request do
           response_body: File.binread('spec/test-image.pdf'),
           expected_parsed_response: File.binread('spec/test-image.pdf'),
           headers: { 'content-type' => 'application/pdf' }
+        },
+        {
+          description: 'when no headers are set, json is assumed',
+          response_body: '{ "response": "body" }',
+          expected_parsed_response: { response: 'body' }.with_indifferent_access,
         }
       ]
 
