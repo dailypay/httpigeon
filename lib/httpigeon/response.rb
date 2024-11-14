@@ -25,7 +25,7 @@ module HTTPigeon
     private
 
     def parse_response
-      parsable_content_type = headers['content-type'].blank? || headers['content-type'].include?('application/json')
+      parsable_content_type = headers.blank? || headers['content-type'].blank? || headers['content-type'].include?('application/json')
       parsed_body = body.is_a?(String) && parsable_content_type ? JSON.parse(body) : body
       @parsed_response = deep_with_indifferent_access(parsed_body)
     rescue JSON::ParserError
