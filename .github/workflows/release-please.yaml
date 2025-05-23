@@ -10,7 +10,7 @@ jobs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
     permissions: write-all
-    runs-on: ubuntu-latest
+    runs-on: k8s-general
     steps:
       - uses: google-github-actions/release-please-action@v3
         id: release

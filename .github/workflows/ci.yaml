@@ -6,7 +6,7 @@ on:
 
 jobs:
   validate-conventional-commit:
-    runs-on: ubuntu-latest
+    runs-on: k8s-general
     steps:
       - name: Check for conventional commit
         uses: agenthunt/conventional-commit-checker-action@v1.0.0
@@ -15,7 +15,7 @@ jobs:
           pr-body-regex: '.*'
 
   unit-test:
-    runs-on: ubuntu-latest
+    runs-on: k8s-general
     if: ${{ github.event.action != 'edited' }}
     steps:
       - uses: actions/checkout@v3
