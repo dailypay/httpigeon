@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.3](https://github.com/dailypay/httpigeon/compare/v2.3.2...v2.3.3) (2025-08-20)
+
+
+### Bug Fixes
+
+* **main:** Upgrade rake version ([#48](https://github.com/dailypay/httpigeon/issues/48)) ([b83a5c2](https://github.com/dailypay/httpigeon/commit/b83a5c23ac326d5741000437467845b102ccdfb4))
+
 ## [2.3.2](https://github.com/dailypay/httpigeon/compare/v2.3.1...v2.3.2) (2024-11-14)
 
 
