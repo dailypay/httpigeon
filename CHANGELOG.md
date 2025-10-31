@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.0](https://github.com/dailypay/httpigeon/compare/v2.3.3...v2.4.0) (2025-10-31)
+
+
+### Features
+
+* **ruby:** [NO-TICKET] Support and test Ruby 3.3 ([#51](https://github.com/dailypay/httpigeon/issues/51)) ([56ff677](https://github.com/dailypay/httpigeon/commit/56ff6778f60d892e464e5df775b9db7a3dd7fe80))
+
 ## [2.3.3](https://github.com/dailypay/httpigeon/compare/v2.3.2...v2.3.3) (2025-08-20)
 
 
