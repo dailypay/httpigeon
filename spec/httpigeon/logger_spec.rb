@@ -28,10 +28,11 @@ describe HTTPigeon::Logger do
     let(:base_data) { { something: 'important', error: error } }
     let(:response_status) { 200 }
     let(:faraday_env) do
-      OpenStruct.new(
+      # rubocop:disable Lint/StructNewOverride
+      Struct.new(:method, :url, :request_headers, :request_body, :response_headers, :response_body, :status, keyword_init: true).new(
         {
           method: 'post',
-          url: OpenStruct.new(
+          url: Struct.new(:to_s, :host, :path, :scheme, keyword_init: true).new(
             {
               to_s: 'http://example.com/home?client_id=client_007&client_secret=agent0047&dark_mode=true',
               host: 'example.com',
@@ -46,6 +47,7 @@ describe HTTPigeon::Logger do
           status: response_status
         }
       )
+      # rubocop:enable Lint/StructNewOverride
     end
 
     let(:log_payload) do

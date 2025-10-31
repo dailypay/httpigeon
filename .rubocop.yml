@@ -73,7 +73,7 @@ Style/FetchEnvVar:
   Enabled: false
 
 Style/OpenStructUse:
-  Enabled: false
+  Enabled: true
 
 Style/RedundantInitialize:
   Exclude:
