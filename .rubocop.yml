@@ -2,7 +2,7 @@ require:
   - rubocop-rspec
 
 AllCops:
-  TargetRubyVersion: 3.3.10
+  TargetRubyVersion: 3.1.2
   Exclude:
     - 'bin/**/*'
     - 'vendor/**/*'
@@ -73,7 +73,7 @@ Style/FetchEnvVar:
   Enabled: false
 
 Style/OpenStructUse:
-  Enabled: false
+  Enabled: true
 
 Style/RedundantInitialize:
   Exclude:
