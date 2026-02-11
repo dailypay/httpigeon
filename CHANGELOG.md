@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.1](https://github.com/dailypay/httpigeon/compare/v2.4.0...v2.4.1) (2026-02-11)
+
+
+### Bug Fixes
+
+* Bump version to 2.4.1 ([#54](https://github.com/dailypay/httpigeon/issues/54)) ([0585ee5](https://github.com/dailypay/httpigeon/commit/0585ee556de27eb07f543dd0cb8cd85e5b92684c))
+
 ## [2.4.0](https://github.com/dailypay/httpigeon/compare/v2.3.3...v2.4.0) (2025-10-31)
 
 
