@@ -77,13 +77,14 @@ describe HTTPigeon::Request do
 
       allow(logger_instance).to receive(:is_a?).with(HTTPigeon::Logger).and_return(true)
       allow(custom_logger_klass).to receive(:new).and_return(logger_instance)
+      allow(SecureRandom).to receive(:uuid).and_return('request-uuid')
     end
 
     context 'when a block is given' do
       it 'sets the expected default headers' do
         request = described_class.new(base_url: 'https://www.example.com', headers: { 'Foo' => 'barzz' })
 
-        expect(request.connection.headers.slice(*%w[Accept Foo])).to eq({ 'Accept' => 'application/json', 'Foo' => 'barzz' })
+        expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq({ 'Accept' => 'application/json', 'X-Request-Id' => 'request-uuid', 'Foo' => 'barzz' })
       end
 
       it 'sets the request options if provided' do
@@ -135,7 +136,7 @@ describe HTTPigeon::Request do
       it 'sets the expected default headers' do
         request = described_class.new(base_url: 'https://www.example.com', headers: { 'Foo' => 'barzz' })
 
-        expect(request.connection.headers.slice(*%w[Accept Foo])).to eq({ 'Accept' => 'application/json', 'Foo' => 'barzz' })
+        expect(request.connection.headers.slice(*%w[Accept X-Request-Id Foo])).to eq({ 'Accept' => 'application/json', 'X-Request-Id' => 'request-uuid', 'Foo' => 'barzz' })
       end
 
       it 'uses the default logger if a custom logger is not provided' do
@@ -192,6 +193,37 @@ describe HTTPigeon::Request do
       allow_any_instance_of(Faraday::Response).to receive(:body).and_return(response_body)
       allow_any_instance_of(Faraday::Response).to receive(:headers).and_return(response_headers)
       allow(request.fuse).to receive(:execute).and_call_original
+    end
+
+    describe 'method validation' do
+      let(:response_body) { { response: 'body' }.to_json }
+      let(:response_headers) { { 'content-type' => 'application/json' } }
+
+      context 'when method is allowed' do
+        [:get, :post, :put, :delete].each do |allowed_method|
+          it "allows #{allowed_method} method" do
+            expect { request.run(method: allowed_method, path: '/users', payload: {}) }.not_to raise_error
+          end
+        end
+
+        it 'allows method as string and converts to symbol' do
+          expect { request.run(method: 'get', path: '/users', payload: {}) }.not_to raise_error
+        end
+      end
+
+      context 'when method is not allowed' do
+        it 'raises ArgumentError for arbitrary method names' do
+          expect { request.run(method: :system, path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: system')
+        end
+
+        it 'raises ArgumentError for dangerous method names' do
+          expect { request.run(method: :eval, path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: eval')
+        end
+
+        it 'raises ArgumentError for method as string' do
+          expect { request.run(method: 'options', path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: options')
+        end
+      end
     end
 
     context 'when circuit breaker is disabled' do

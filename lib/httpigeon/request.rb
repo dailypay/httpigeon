@@ -7,6 +7,7 @@ require_relative "middleware/httpigeon_logger"
 module HTTPigeon
   class Request
     REQUEST_ID_HEADER = 'X-Request-Id'.freeze
+    ALLOWED_METHODS = %i[get post put patch delete].freeze
 
     class << self
       def get(endpoint, query = {}, headers = {}, event_type = nil, log_filters = [])
@@ -45,7 +46,7 @@ module HTTPigeon
     def initialize(base_url:, options: nil, headers: nil, adapter: nil, logger: nil, event_type: nil, log_filters: nil, fuse_config: nil)
       @base_url = URI.parse(base_url)
 
-      request_headers = default_headers.merge(headers.to_h)
+      request_headers = default_headers(request_id: SecureRandom.uuid).merge(headers.to_h)
       fuse_config_opts = { service_id: @base_url.host }.merge(fuse_config.to_h)
       @fuse = CircuitBreaker::Fuse.from_options(fuse_config_opts)
 
@@ -70,7 +71,13 @@ module HTTPigeon
     end
 
     def run(method: :get, path: '/', payload: {})
-      unless method.to_sym == :get || method.to_sym == :delete
+      sym_method = method.to_sym
+
+      unless ALLOWED_METHODS.include?(sym_method)
+        raise ArgumentError, "Invalid or unsupported HTTP method: #{method}"
+      end
+
+      unless sym_method == :get || sym_method == :delete
         payload = payload.presence&.to_json
         connection.headers['Content-Type'] = 'application/json'
       end
@@ -100,8 +107,8 @@ module HTTPigeon
       HTTPigeon::Logger.new(event_type: event_type, log_filters: log_filters)
     end
 
-    def default_headers
-      { 'Accept' => 'application/json' }
+    def default_headers(request_id: nil)
+      { 'Accept' => 'application/json', REQUEST_ID_HEADER => request_id }.compact
     end
   end
 end
