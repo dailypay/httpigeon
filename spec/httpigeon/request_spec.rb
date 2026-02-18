@@ -200,7 +200,7 @@ describe HTTPigeon::Request do
       let(:response_headers) { { 'content-type' => 'application/json' } }
 
       context 'when method is allowed' do
-        [:get, :post, :put, :patch, :delete, :head, :options].each do |allowed_method|
+        %i[get post put patch delete head options].each do |allowed_method|
           it "allows #{allowed_method} method" do
             expect { request.run(method: allowed_method, path: '/users', payload: {}) }.not_to raise_error
           end
