@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.2](https://github.com/dailypay/httpigeon/compare/v2.4.1...v2.4.2) (2026-02-18)
+
+
+### Bug Fixes
+
+* **MIMO-3352:** Address RCE vulnerability ([#56](https://github.com/dailypay/httpigeon/issues/56)) ([43577ce](https://github.com/dailypay/httpigeon/commit/43577ce579e56a92388f7e9b70b0425e7fc8fcd8))
+
 ## [2.4.1](https://github.com/dailypay/httpigeon/compare/v2.4.0...v2.4.1) (2026-02-11)
 
 
