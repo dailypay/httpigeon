@@ -200,7 +200,7 @@ describe HTTPigeon::Request do
       let(:response_headers) { { 'content-type' => 'application/json' } }
 
       context 'when method is allowed' do
-        [:get, :post, :put, :delete].each do |allowed_method|
+        [:get, :post, :put, :patch, :delete, :head, :options].each do |allowed_method|
           it "allows #{allowed_method} method" do
             expect { request.run(method: allowed_method, path: '/users', payload: {}) }.not_to raise_error
           end
@@ -213,7 +213,7 @@ describe HTTPigeon::Request do
 
       context 'when method is not allowed' do
         it 'raises ArgumentError for arbitrary method names' do
-          expect { request.run(method: :system, path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: system')
+          expect { request.run(method: :foo, path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: foo')
         end
 
         it 'raises ArgumentError for dangerous method names' do
@@ -221,7 +221,7 @@ describe HTTPigeon::Request do
         end
 
         it 'raises ArgumentError for method as string' do
-          expect { request.run(method: 'options', path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: options')
+          expect { request.run(method: 'system', path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: system')
         end
       end
     end

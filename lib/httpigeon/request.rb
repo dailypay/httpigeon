@@ -7,7 +7,7 @@ require_relative "middleware/httpigeon_logger"
 module HTTPigeon
   class Request
     REQUEST_ID_HEADER = 'X-Request-Id'.freeze
-    ALLOWED_METHODS = %i[get post put patch delete].freeze
+    ALLOWED_METHODS = %i[get post put patch delete head options].freeze
 
     class << self
       def get(endpoint, query = {}, headers = {}, event_type = nil, log_filters = [])
