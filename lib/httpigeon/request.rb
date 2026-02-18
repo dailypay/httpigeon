@@ -73,11 +73,9 @@ module HTTPigeon
     def run(method: :get, path: '/', payload: {})
       sym_method = method.to_sym
 
-      unless ALLOWED_METHODS.include?(sym_method)
-        raise ArgumentError, "Invalid or unsupported HTTP method: #{method}"
-      end
+      raise ArgumentError, "Invalid or unsupported HTTP method: #{method}" unless ALLOWED_METHODS.include?(sym_method)
 
-      unless sym_method == :get || sym_method == :delete
+      unless [:get, :delete].include?(sym_method)
         payload = payload.presence&.to_json
         connection.headers['Content-Type'] = 'application/json'
       end
