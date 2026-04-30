@@ -183,12 +183,12 @@ describe HTTPigeon::LogRedactor do
       describe 'all patterns combined' do
         subject(:redactor) do
           described_class.new(log_filters: [
-            HTTPigeon::FilterPatterns::EMAIL,
-            HTTPigeon::FilterPatterns::PASSWORD,
-            HTTPigeon::FilterPatterns::USERNAME,
-            HTTPigeon::FilterPatterns::CLIENT_ID,
-            HTTPigeon::FilterPatterns::CLIENT_SECRET
-          ])
+                                HTTPigeon::FilterPatterns::EMAIL,
+                                HTTPigeon::FilterPatterns::PASSWORD,
+                                HTTPigeon::FilterPatterns::USERNAME,
+                                HTTPigeon::FilterPatterns::CLIENT_ID,
+                                HTTPigeon::FilterPatterns::CLIENT_SECRET
+                              ])
         end
 
         it 'redacts multiple sensitive params in one string' do
