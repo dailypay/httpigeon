@@ -12,11 +12,11 @@ module HTTPigeon
   extend self
 
   module FilterPatterns
-    EMAIL = "/(?'key'(email_?(address|Address)?=))(?'value'(.*\\.[a-z]+))(&|$)/".freeze
-    PASSWORD = "/(?'key'(pass_?(w|W)?ord=))(?'value'([^&$])*)/".freeze
-    USERNAME = "/(?'key'(user_?(n|N)?ame=))(?'value'([^&$])*)/".freeze
-    CLIENT_ID = "/(?'key'(client_?(id|Id)?=))(?'value'([^&$])*)/".freeze
-    CLIENT_SECRET = "/(?'key'(client_?(s|S)?ecret=))(?'value'([^&$])*)/".freeze
+    EMAIL = "/(?'key'(email_?(address|Address)?=))(?'value'([^&\\n\\r]*\\.[a-z]+))(?=&|$)/".freeze
+    PASSWORD = "/(?'key'(pass_?(w|W)?ord=))(?'value'([^&\\n\\r])*)/".freeze
+    USERNAME = "/(?'key'(user_?(n|N)?ame=))(?'value'([^&\\n\\r])*)/".freeze
+    CLIENT_ID = "/(?'key'(client_?(id|Id)?=))(?'value'([^&\\n\\r])*)/".freeze
+    CLIENT_SECRET = "/(?'key'(client_?(s|S)?ecret=))(?'value'([^&\\n\\r])*)/".freeze
   end
 
   class InvalidConfigurationError < StandardError; end
