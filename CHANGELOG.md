@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.3](https://github.com/dailypay/httpigeon/compare/v2.4.2...v2.4.3) (2026-05-01)
+
+
+### Bug Fixes
+
+* **ASV-4003:** Fix default filter regex patterns ([#61](https://github.com/dailypay/httpigeon/issues/61)) ([8cb6d37](https://github.com/dailypay/httpigeon/commit/8cb6d37c0d441507f0c18b19ea1b406fca2b5d6b))
+
 ## [2.4.2](https://github.com/dailypay/httpigeon/compare/v2.4.1...v2.4.2) (2026-02-18)
 
 
