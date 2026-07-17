@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.4.4](https://github.com/dailypay/httpigeon/compare/v2.4.3...v2.4.4) (2026-07-17)
+
+
+### Bug Fixes
+
+* **ASV-4361:** close five log-redaction and dispatch findings ([#64](https://github.com/dailypay/httpigeon/issues/64)) ([ef56054](https://github.com/dailypay/httpigeon/commit/ef5605465787d5cea1cce6f39ffd96763502a968))
+
 ## [2.4.3](https://github.com/dailypay/httpigeon/compare/v2.4.2...v2.4.3) (2026-05-01)
 
 
