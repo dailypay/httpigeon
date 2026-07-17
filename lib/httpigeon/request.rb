@@ -84,12 +84,12 @@ module HTTPigeon
 
       raw_response = if HTTPigeon.mount_circuit_breaker
                        fuse.execute(request_id: connection.headers[REQUEST_ID_HEADER]) do
-                         connection.send(method, path, payload) do |request|
+                         connection.send(sym_method, path, payload) do |request|
                            yield(request) if block_given?
                          end
                        end
                      else
-                       connection.send(method, path, payload) do |request|
+                       connection.send(sym_method, path, payload) do |request|
                          yield(request) if block_given?
                        end
                      end

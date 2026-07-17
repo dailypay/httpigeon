@@ -201,6 +201,54 @@ describe HTTPigeon::LogRedactor do
       end
     end
 
+    context 'when a filtered key holds a nested collection' do
+      it 'fully redacts a nested hash instead of leaking fragments' do
+        filters = %w[token]
+        data = { token: { access: 'SUPER_SECRET_ACCESS_TOKEN_123456', refresh: 'REFRESH_SECRET_999' } }
+
+        expect(described_class.new(log_filters: filters).redact(data)).to eq({ token: '<redacted>' })
+      end
+
+      it 'fully redacts a nested array instead of leaking fragments' do
+        filters = %w[credentials]
+        data = { credentials: %w[SUPER_SECRET_ONE SUPER_SECRET_TWO] }
+
+        expect(described_class.new(log_filters: filters).redact(data)).to eq({ credentials: '<redacted>' })
+      end
+    end
+
+    context 'when a content filter matches a string value inside a hash' do
+      it 'redacts the secret regardless of the key name' do
+        filters = [HTTPigeon::FilterPatterns::CLIENT_SECRET]
+        data = { error_uri: 'https://idp/cb?client_id=abc&client_secret=REALSECRET' }
+
+        expect(described_class.new(log_filters: filters).redact(data)).to eq(
+          { error_uri: 'https://idp/cb?client_id=abc&client_secret=REA...<redacted>' }
+        )
+      end
+    end
+
+    context 'when a replacement contains a gsub backreference' do
+      it 'treats the backreference literally instead of re-emitting the secret' do
+        filters = ['/(password=)([^&]+)/::password=\2']
+        data = 'https://api.example.com/auth?password=S3cr3tP@ssw0rd&grant_type=code'
+
+        expect(described_class.new(log_filters: filters).redact(data)).to eq(
+          'https://api.example.com/auth?password=\2&grant_type=code'
+        )
+      end
+    end
+
+    context 'when a grouped filter matches an empty capture' do
+      it 'does not raise and leaves the empty value in place' do
+        filters = %w[/(client_id=)([0-9a-z]+)*/]
+        data = 'action=login&client_id=&next=home'
+
+        expect { described_class.new(log_filters: filters).redact(data) }.not_to raise_error
+        expect(described_class.new(log_filters: filters).redact(data)).to eq('action=login&client_id=&next=home')
+      end
+    end
+
     context 'when filters include an invalid regex' do
       it 'raises an error' do
         filters = %w[/key_3=[0-9a-z]*/im::key_3=<redacted> key_4]
