@@ -48,15 +48,21 @@ module HTTPigeon
 
         if filter.present?
           replacement = filter.split('::')[1].presence
-          v = replacement.present? ? replacement : redact_value(v)
-        end
-
-        if v.is_a?(Hash)
-          [k, redact_hash(v)]
-        elsif v.is_a?(Array)
-          [k, v.map { |val| redact(val) }]
-        else
+          # Replace collections wholesale; partial redaction leaks bytes of
+          # nested secrets.
+          v = if replacement.present?
+                replacement
+              elsif v.is_a?(Hash) || v.is_a?(Array)
+                HTTPigeon.redactor_string
+              else
+                redact_value(v)
+              end
           [k, v]
+        else
+          # Recurse through the dispatcher so nested values redact like
+          # top-level ones. This runs content/regex filters over string
+          # values too (e.g. secrets in JSON bodies).
+          [k, redact(v)]
         end
       end
     end
@@ -67,13 +73,23 @@ module HTTPigeon
 
         next unless pattern.match?(%r{^/.*/([guysim]*)$})
 
-        data = if replacement.present?
-                 data.gsub(regex_for(pattern), replacement)
-               else
-                 data.gsub(regex_for(pattern)) do |sub|
-                   captures = sub.match(regex_for(pattern))&.captures
+        regex = regex_for(pattern)
 
-                   captures.present? ? captures[0] + redact_value(captures[1]) : sub
+        data = if replacement.present?
+                 # Block form keeps the replacement literal; the string form
+                 # expands backreferences (\1, \&) and re-emits the secret.
+                 data.gsub(regex) { replacement }
+               else
+                 data.gsub(regex) do |sub|
+                   captures = Regexp.last_match&.captures
+
+                   # A zero-width capture yields nil; skip it rather than
+                   # concatenating nil and raising TypeError.
+                   if captures.present? && !captures[1].nil?
+                     captures[0] + redact_value(captures[1])
+                   else
+                     sub
+                   end
                  end
                end
       end

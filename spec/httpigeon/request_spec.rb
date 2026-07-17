@@ -223,6 +223,21 @@ describe HTTPigeon::Request do
         it 'raises ArgumentError for method as string' do
           expect { request.run(method: 'system', path: '/users', payload: {}) }.to raise_error(ArgumentError, 'Invalid or unsupported HTTP method: system')
         end
+
+        it 'dispatches the validated symbol, not a to_sym/to_str divergent object' do
+          clever_method = Class.new do
+            def to_sym = :get
+            def to_str = 'instance_eval'
+          end.new
+
+          allow(request.connection).to receive(:instance_eval)
+          allow(request.connection).to receive(:get).and_call_original
+
+          request.run(method: clever_method, path: '/users', payload: {})
+
+          expect(request.connection).to have_received(:get)
+          expect(request.connection).not_to have_received(:instance_eval)
+        end
       end
     end
 
