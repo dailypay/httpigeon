@@ -1,0 +1,6 @@
+{
+  "env": {
+    "CLAUDE_CODE_USE_BEDROCK": "1",
+    "ANTHROPIC_CUSTOM_HEADERS": "X-Amzn-Bedrock-Request-Metadata: {\"project\": \"httpigeon\", \"repository\": \"dailypay/httpigeon\"}"
+  }
+}
