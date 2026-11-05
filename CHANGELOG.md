@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.5.0](https://github.com/dailypay/httpigeon/compare/v2.4.4...v2.5.0) (2026-11-05)
+
+
+### Features
+
+* **AX-2975:** Allow activesupport 8.0 and 8.1 ([#68](https://github.com/dailypay/httpigeon/issues/68)) ([50b9965](https://github.com/dailypay/httpigeon/commit/50b9965a6660e6fb780f99a9c35a745affd27b30))
+
 ## [2.4.4](https://github.com/dailypay/httpigeon/compare/v2.4.3...v2.4.4) (2026-07-17)
 
 
